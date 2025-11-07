@@ -1,4 +1,4 @@
-﻿location,well_or_spring_name,utm_e,utm_n,depth_bgl_in_m,rock_type,stratigraphic_period,temperature_in_c,electrical_conductivity_25c_in_uS/cm,pH,redox_potential_in_mV,total_dissolved_solids_in_mmol/L,O2_in_mmol/L,Na_in_mmol/L,Mg_in_mmol/L,Ca_in_mmol/L,Cl_in_mmol/L,SO4_in_mmol/L,HCO3_in_mmol/L,Li_in_mmol/L,K_in_mmol/L,Sr_in_umol/L,NH4_in_umol/L,Fe_in_mmol/L,Mn_in_mmol/L,F_in_umol/L,NO3_in_mmol/L,H2SiO3_in_umol/L,HS_in_mmol/L
+﻿location,well_or_spring_name,WGS84_latitude,WGS84_longitude,depth_bgl_in_m,rock_type,stratigraphic_period,temperature_in_c,electrical_conductivity_25c_in_uS/cm,pH,redox_potential_in_mV,total_dissolved_solids_in_mmol/L,O2_in_mmol/L,Na_in_mmol/L,Mg_in_mmol/L,Ca_in_mmol/L,Cl_in_mmol/L,SO4_in_mmol/L,HCO3_in_mmol/L,Li_in_mmol/L,K_in_mmol/L,Sr_in_umol/L,NH4_in_umol/L,Fe_in_mmol/L,Mn_in_mmol/L,F_in_umol/L,NO3_in_mmol/L,H2SiO3_in_umol/L,HS_in_mmol/L
 Steiermark,Blumau 2,47.12,16.04,2843,,,,,,,,,,,,4170,494.42,,,,,,,,10.27,,,
 Steiermark,Blumau 2,47.12,16.04,2843,,,,,,,,,,,,4310,506.88,,,,,,,,10.08,,,
 Steiermark,Blumau 2,47.12,16.04,2843,,,,,,,,,,,,4270,524,,,,,,,,9.91,,,
