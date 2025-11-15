@@ -4,7 +4,7 @@ https://doi.pangaea.de/10.1594/PANGAEA.916088
 ARGONNE_Datenbank ✅ 1
 https://catalog.data.gov/dataset/argonne-geothermal-geochemical-database-v2-0-53978/resource/35bedd29-61f0-418e-8233-0511640a8d9e#:~:text=Argonne%20Geothermal%20Geochemical%20Database%20v2_00
 
-Australia Mataranka 🟥 8
+Australia Mataranka ✅ 8
 https://www.nature.com/articles/s41598-021-03701-1?error=cookies_not_supported&code=d245a11e-6034-45f3-b6f9-c53fc736651e#article-info
 
 CAES2024_Datenbank ✅
@@ -28,7 +28,7 @@ https://www.reflect-h2020.eu/efa/#form1
 SVZ-CHILE_Datenbank ✅ 3
 https://repositorio.uchile.cl/bitstream/handle/2250/149568/Geochemistry-of-thermal-waters.pdf
 
-Thailand 🟥 9
+Thailand ✅ 9
 https://www.tshe.org/ea/pdf/EA14(3)/EA14(3)_04.pdf#:~:text=Geochemical%20data%20from%20more%20than,The%20geochemical%20data
 
 USGS_Datenbank ✅
