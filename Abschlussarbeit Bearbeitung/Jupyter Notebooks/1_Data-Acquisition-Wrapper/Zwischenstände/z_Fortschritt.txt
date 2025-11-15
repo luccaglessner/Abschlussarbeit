@@ -1,7 +1,7 @@
 ALPS_Datenbank ✅ 2
 https://doi.pangaea.de/10.1594/PANGAEA.916088
 
-ARGONNE_Datenbank 🟥 1
+ARGONNE_Datenbank ✅ 1
 https://catalog.data.gov/dataset/argonne-geothermal-geochemical-database-v2-0-53978/resource/35bedd29-61f0-418e-8233-0511640a8d9e#:~:text=Argonne%20Geothermal%20Geochemical%20Database%20v2_00
 
 Australia Mataranka 🟥 8
@@ -14,6 +14,7 @@ Gandaki Province, Nepal 🟥 5
 https://www.cell.com/heliyon/fulltext/S2405-8440(23)04561-9?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS2405844023045619%3Fshowall%3Dtrue
 
 HESSEN_Datenbank🟥 6
+https://essd.copernicus.org/articles/13/4847/2021/
 
 MDPI_Tibet_Datenbank ✅
 https://www.mdpi.com/2073-4441/14/1/132
@@ -24,7 +25,8 @@ https://www.mdpi.com/2073-4441/14/4/550#:~:text=The%2043%20hot%20springs%20were,
 REFLECT_Datenbank ✅
 https://www.reflect-h2020.eu/efa/#form1
 
-SVZ-CHILE_Datenbank 🟥 3
+SVZ-CHILE_Datenbank ✅ 3
+https://repositorio.uchile.cl/bitstream/handle/2250/149568/Geochemistry-of-thermal-waters.pdf
 
 Thailand 🟥 9
 https://www.tshe.org/ea/pdf/EA14(3)/EA14(3)_04.pdf#:~:text=Geochemical%20data%20from%20more%20than,The%20geochemical%20data
@@ -32,5 +34,5 @@ https://www.tshe.org/ea/pdf/EA14(3)/EA14(3)_04.pdf#:~:text=Geochemical%20data%20
 USGS_Datenbank ✅
 https://www.sciencebase.gov/catalog/item/59d25d63e4b05fe04cc235f9
 
-Yukon Geothermal Springs 🟥 4
+Yukon Geothermal Springs ✅ 4
 https://open.yukon.ca/data/geothermal-thermal-springs
