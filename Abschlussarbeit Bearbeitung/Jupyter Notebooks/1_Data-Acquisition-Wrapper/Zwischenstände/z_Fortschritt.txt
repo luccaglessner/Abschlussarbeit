@@ -10,16 +10,16 @@ https://www.nature.com/articles/s41598-021-03701-1?error=cookies_not_supported&c
 CAES2024_Datenbank ✅
 https://gdr.openei.org/submissions/425
 
-Gandaki Province, Nepal 🟥 5
+Gandaki Province, Nepal ✅ 5
 https://www.cell.com/heliyon/fulltext/S2405-8440(23)04561-9?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS2405844023045619%3Fshowall%3Dtrue
 
-HESSEN_Datenbank🟥 6
+HESSEN_Datenbank ✅ 6
 https://essd.copernicus.org/articles/13/4847/2021/
 
 MDPI_Tibet_Datenbank ✅
 https://www.mdpi.com/2073-4441/14/1/132
 
-MDPI Xianshuihe 🟥 7
+MDPI Xianshuihe ✅ 7
 https://www.mdpi.com/2073-4441/14/4/550#:~:text=The%2043%20hot%20springs%20were,rate%20of%20slip%20in%20the
 
 REFLECT_Datenbank ✅
