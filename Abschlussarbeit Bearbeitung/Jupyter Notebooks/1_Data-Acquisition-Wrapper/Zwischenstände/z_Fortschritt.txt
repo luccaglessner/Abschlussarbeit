@@ -1,3 +1,14 @@
+Ethiopia 🟧
+https://www.researchgate.net/publication/354273627_Geothermal_energy_resources_in_Ethiopia_Status_review_and_insights_from_hydrochemistry_of_surface_and_groundwaters
+
+OoL_supplementary 🟧
+https://webapps.bgs.ac.uk/services/ngdc/accessions/index.html
+
+Gorontalo 🟧
+https://zenodo.org/records/45631#:~:text=These%20files%20are%20the%20dataset,1
+
+----------------------------------
+
 ALPS_Datenbank ✅ 2
 https://doi.pangaea.de/10.1594/PANGAEA.916088
 
