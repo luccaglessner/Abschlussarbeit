@@ -2,20 +2,24 @@
 # Ordner ignorieren: Jupyter Notebooks
 # --------------------------------------
 
-# 1) Datenbanken (riesige CSV/XLSX)
+# [1.1] Datenbanken (riesige CSV/XLSX)
 Jupyter Notebooks/1.1_Data-Acquisition-Wrapper/Angepasste_Datenbanken/Komplette_Datenbank/
 
-# 2) Rock-Type Mapping
+# [1.2] Rock-Type Mapping
 Jupyter Notebooks/1.2_Rock-Type-Mapping/Rock-Type_Mapping/
 
-# 3) Explorative Datenanalyse
+# [2.1] Explorative Datenanalyse
 Jupyter Notebooks/2.1_Explorative-Datenanalyse/Datenanalyse/
 
-# 4) Rock-Type Analysis
+# [2.2] Rock-Type Analysis
 Jupyter Notebooks/2.2_Rock-Type_Analysis/Rock-Type_Analysis/
 
-# Optional: generelle HTML-Karten
+# [Zusatz] Python Auslagerung
+Jupyter Notebooks/Zusatz_Python-Auslagerung/Input_formatted_xlsx/
+Jupyter Notebooks/Zusatz_Python-Auslagerung/Output_cleaned_csv/
+
+# generelle HTML-Karten
 *.html
 
-# Optional: ZIP-Dateien (wie dein Jupyter Notebooks.zip)
+# ZIP-Dateien (wie dein Jupyter Notebooks.zip)
 *.zip
