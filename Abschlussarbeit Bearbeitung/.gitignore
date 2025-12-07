@@ -18,6 +18,11 @@ Jupyter Notebooks/2.2_Rock-Type_Analysis/Rock-Type_Analysis/
 Jupyter Notebooks/Zusatz_Python-Auslagerung/Input_formatted_xlsx/
 Jupyter Notebooks/Zusatz_Python-Auslagerung/Output_cleaned_csv/
 
+# Website-Wrapper
+Wrapper_Website\__pycache__
+Wrapper_Website\outputs
+Wrapper_Website\uploads
+
 # generelle HTML-Karten
 *.html
 
