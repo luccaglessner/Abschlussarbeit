@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Excel to CSV with global data scheme</title>
+    <style>
+        body { font-family: sans-serif; max-width: 1100px; margin: 2rem auto; }
+        table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+        th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; }
+        th { background: #f2f2f2; }
+        input[type="text"], textarea { width: 100%; box-sizing: border-box; }
+        textarea { min-height: 200px; font-family: monospace; }
+        .block { margin: 1.5rem 0; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+<h1>Excel to CSV with global data scheme</h1>
+
+<form method="post" enctype="multipart/form-data">
+
+    <div class="block">
+        <label>Select file:
+            <input type="file" name="excel_file" accept=".xlsx">
+        </label>
+    </div>
+
+    <div class="block">
+        <label>Sheet-Name (empty = first sheet):
+            <input type="text" name="sheet_name">
+        </label>
+    </div>
+
+    <div class="block">
+        <label>Database Name:
+            <input type="text" name="database_name" value="{{ database_name }}">
+        </label>
+    </div>
+    <div class="block">
+        <label>Database Number:
+            <input type="text" name="database_number" value="{{ database_number }}">
+        </label>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Global attributes</th>
+                <th>Column names in Excel</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for col in mapping_columns %}
+            <tr>
+                <td>{{ col }}</td>
+                <td><input type="text" name="src_{{ loop.index0 }}"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="block">
+        <h2>Optional: Python-Code vor der Konvertierung</h2>
+        <p>Hier kannst du den DataFrame <code>df</code> modifizieren, bevor das Mapping passiert.</p>
+        <textarea name="python_code">{{ python_code }}</textarea>
+    </div>
+
+    <div class="block">
+        <button type="submit">Convert</button>
+    </div>
+</form>
+
+{% if error %}
+    <div class="error">{{ error }}</div>
+{% endif %}
+
+{% if download_file %}
+    <p><strong>Download:</strong>
+        <a href="{{ url_for('download', filename=download_file) }}">{{ download_file }}</a>
+    </p>
+{% endif %}
+
+</body>
+</html>

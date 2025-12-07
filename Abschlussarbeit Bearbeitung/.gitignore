@@ -19,12 +19,14 @@ Jupyter Notebooks/Zusatz_Python-Auslagerung/Input_formatted_xlsx/
 Jupyter Notebooks/Zusatz_Python-Auslagerung/Output_cleaned_csv/
 
 # Website-Wrapper
-Wrapper_Website\__pycache__
-Wrapper_Website\outputs
-Wrapper_Website\uploads
+Wrapper_Website/__pycache__
+Wrapper_Website/outputs
+Wrapper_Website/uploads
 
-# generelle HTML-Karten
+# HTML-Dateien global ignorieren, aber Templates erlauben:
 *.html
+!Wrapper_Website/templates/
+!Wrapper_Website/templates/**/*.html
 
 # ZIP-Dateien (wie dein Jupyter Notebooks.zip)
 *.zip
