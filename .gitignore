@@ -1,0 +1,50 @@
+# --------------------------------------
+# Ordner ignorieren: Jupyter Notebooks
+# --------------------------------------
+
+# [1.1] Datenbanken (riesige CSV/XLSX)
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1.1_Data-Acquisition-Wrapper/Angepasste_Datenbanken/Komplette_Datenbank/
+
+# [1.2] Rock-Type Mapping
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1.2_Rock-Type-Mapping/Rock-Type_Mapping/
+
+# [2.1] Explorative Datenanalyse
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/2.1_Explorative-Datenanalyse/Datenanalyse/
+
+# [2.2] Rock-Type Analysis
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/2.2_Rock-Type_Analysis/Rock-Type_Analysis/
+
+# [Zusatz] Python Auslagerung
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/Zusatz_Python-Auslagerung/Input_formatted_xlsx/
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/Zusatz_Python-Auslagerung/Output_cleaned_csv/
+
+
+# Website-Wrapper
+/Abschlussarbeit Bearbeitung/Wrapper_Website/__pycache__/
+/Abschlussarbeit Bearbeitung/Wrapper_Website/outputs
+/Abschlussarbeit Bearbeitung/Wrapper_Website/uploads
+
+# HTML-Dateien global ignorieren, aber Templates erlauben:
+*.html
+!/Abschlussarbeit Bearbeitung/Wrapper_Website/templates/
+!/Abschlussarbeit Bearbeitung/Wrapper_Website/templates/**/*.html
+!/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1.1_Data-Acquisition-Wrapper/Kartierung/**/*.html
+
+# ZIP-Dateien (wie dein Jupyter Notebooks.zip)
+*.zip
+
+
+# Python
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+__pycache__/
+**/__pycache__/
+*.pyc
+
+
+# Antigravity
+.antigravity/cache/
+.antigravity/logs/
+.antigravity/tmp/
+.antigravity/runtime/
