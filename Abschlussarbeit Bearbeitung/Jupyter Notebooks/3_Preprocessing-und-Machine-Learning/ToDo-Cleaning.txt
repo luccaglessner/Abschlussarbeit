@@ -1,0 +1,10 @@
+Schauen, welche Skalierung am besten ist
+
+
+Aktuell:
+- Gaussian Quantile Transform
+
+Sonstige Möglichkeiten:
+- z-Transformation (Standard Scaler)
+- MinMax
+
