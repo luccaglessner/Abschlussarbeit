@@ -1,0 +1,37 @@
+IntraSOM Training Report
+Project: IntraSOM_Analysis
+
+Input Data:
+Features: 6
+Samples: 6790
+Cells: 40740
+
+--------------------------------------------------
+Initialization Parameters:
+
+Map Size: 10 columns and 10 lines
+Training Polygon: Toroid
+Lattice: Hexagonal
+Normalization: None
+Initialization: Randomic
+Neighborhood Function: Gaussian
+Number of Labels: 0
+
+--------------------------------------------------
+Training Parameters:
+
+Rough Training:
+Size: 1
+Initial Ratio: 4.0
+Final Ratio: 1
+
+Finetube Training:
+Size: 1
+Initial Ratio: 1.25
+Final Ratio: 1
+
+--------------------------------------------------
+Training Evaluation:
+
+Quantization Error: 1.8383
+Topographic Error: 0.2199
