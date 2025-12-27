@@ -1,0 +1,83 @@
+Ausführungsreihenfolge der Jupyter Notebooks
+=============================================
+
+Dieses Dokument beschreibt die empfohlene Reihenfolge der Ausführung aller Jupyter Notebooks in diesem Projekt. Diese Reihenfolge stellt sicher, dass alle benötigten Input-Dateien für nachfolgende Notebooks korrekt generiert wurden.
+
+--------------------------------------------------------------------------------------------------
+0. 0_Überprüfung_geeigneter_Datenbanken
+   - Pfad: `0_Überprüfung_geeigneter_Datenbanken/Überprüfung_geeigneter_Datenbanken.ipynb`
+   - Zweck: Überprüft die Verfügbarkeit und Struktur der ursprünglichen Rohdaten.
+   - Abhängigkeit: Keine (Liest Rohdaten).
+   - Ausführung: Optional / Als erster Schritt zur Überprüfung.
+
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+1. Akquise
+--------------------------------------------------------------------------------------------------
+
+1. 1.1_Data-Acquisition-Wrapper (KRITISCH)
+   - Pfad: `1.1_Data-Acquisition-Wrapper/Data-Acquisition-Wrapper.ipynb`
+   - Zweck: Liest die Rohdaten aus `Gesammelte_Datenbanken` ein, homogenisiert sie und erstellt die "Komplette Datenbank".
+   - Output: Erzeugt `Angepasste_Datenbanken/Komplette_Datenbank/.../Komplette_Datenbank.csv`.
+   - Wichtig: Dieses Notebook muss zwingend ausgeführt werden, bevor andere Schritte (außer 0) durchgeführt werden können.
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+2. Analytik
+--------------------------------------------------------------------------------------------------
+
+2. 2.1_Explorative-Datenanalyse
+   - Pfad: `2.1_Explorative-Datenanalyse/Data_Exploration.ipynb`
+   - Zweck: Allgemeine explorative Analyse der Daten.
+
+3. 2.2_Rock-Type_Analysis [Verwendung nur für "without_added_rock-types"
+   - Pfad: `2.2_Rock-Type_Analysis/Rock-Type_Analyzer.ipynb`
+   - Zweck: Vergleicht die Datenqualität und -verteilung vor und nach dem Rock-Type Mapping.
+   - Abhängigkeit: Benötigt Outputs von 1.1 UND 1.2.
+
+4. 2.3_Temperature_Analysis
+   - Pfad: `2.3_Temperature_Analysis/Temperature_Analysis.ipynb`
+   - Zweck: Analyse der Temperaturverteilungen.
+
+5. 2.4_Data-Quality_Ionic-Balance-Error
+   - Pfand: `2.4_Data-Quality_Ionic-Balance-Error/...`
+   - Zweck: Analyse des Ionenbilanzfehlers.
+   - Varianten: Es gibt Unterordner für verschiedene Ionen-Sets (`Global_scheme_ions` etc.).
+   - Ablauf innerhalb der Ordner:
+     a. `1.1_Data-Quality_Raw_Data.ipynb` (Analysiert Rohdaten)
+     b. `1.2_Data-Quality_Adjusted_Data.ipynb` (Analysiert angepasste Daten aus 1.1)
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+3. Machine Learning Pipeline
+--------------------------------------------------------------------------------------------------
+
+6. 3.1_Preprocessing (HAUPTVORAUSSETZUNG FÜR ML)
+   - Pfad: `3.1_Preprocessing/Preprocessing.ipynb`
+   - Zweck: Bereitet die Daten für das Machine Learning vor. Führt Log-Transformation und Gaussian-Scaling durch.
+   - Input: Liest `Komplette_Datenbank.csv` (Output von 1.1).
+   - Output: Erzeugt `Preprocessing/.../Preprocessed_SOM_Ready.csv`.
+
+7. 3.2_Machine-Learning
+   - Pfad: `3.2_Machine-Learning/MiniSom/MiniSom_Machine-Learning.ipynb`
+   - Pfad: `3.2_Machine-Learning/IntraSom/IntraSom_Machine-Learning.ipynb`
+   - Zweck: Trainiert Self-Organizing Maps (SOM) zur Cluster-Analyse.
+   - Input: Liest `Preprocessed_SOM_Ready.csv` (Output von 3.1).
+   - Ausführung: Beide Notebooks sind unabhängig voneinander ausführbar, benötigen aber den Output von 3.1.
+
+Zusammenfassung der Kette:
+1.1 -> 1.2 -> (2.x Analysen)
+1.1 -> 3.1 -> 3.2 (ML)
+
+-------------------
+
+[WERDEN IGNORIERT] Gesteinstypen werden anderweitig ergänzt
+
+ 1.2_Rock-Type-Mapping 
+
+
+ 2.2_Rock-Type_Analysis
+   - Pfad: `2.2_Rock-Type_Analysis/Rock-Type_Analyzer.ipynb`
+   - Zweck: Vergleicht die Datenqualität und -verteilung vor und nach dem Rock-Type Mapping.
+   - Abhängigkeit: Benötigt Outputs von 1.1 UND 1.2.
