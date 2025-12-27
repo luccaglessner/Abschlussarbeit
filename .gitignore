@@ -48,3 +48,5 @@ __pycache__/
 .antigravity/logs/
 .antigravity/tmp/
 .antigravity/runtime/
+# [3.1] Preprocessing Output
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/3.1_Preprocessing/Preprocessing/
