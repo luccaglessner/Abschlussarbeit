@@ -100,6 +100,30 @@ def main():
                 if not run_notebook(nb_b):
                     print("Warnung: Fehler in 1.2, fahre dennoch fort...")
 
+    # Schritt 6: Filter Database (Erzeugt neue DB Version)
+    print(f"\n--- Schritt 6: 2.4_Filter_Database (IBE Filter) ---")
+    filter_nb = dq_root / "2.4_Filter_Database.ipynb"
+    if filter_nb.exists():
+        if not run_notebook(filter_nb):
+            print("FEHLER beim Filtern der Datenbank! Pipeline wird gestoppt.")
+            input("Taste drücken zum Beenden...")
+            sys.exit(1)
+    else:
+        print(f"Fehler: Filter-Notebook nicht gefunden: {filter_nb}")
+        sys.exit(1)
+
+    # Schritt 7: Preprocessing
+    print(f"\n--- Schritt 7: 3.1_Preprocessing ---")
+    prep_nb = BASE_DIR / "3.1_Preprocessing" / "Preprocessing.ipynb"
+    if prep_nb.exists():
+        if not run_notebook(prep_nb):
+            print("FEHLER im Preprocessing! Pipeline wird gestoppt.")
+            input("Taste drücken zum Beenden...")
+            sys.exit(1)
+    else:
+        print(f"Fehler: Preprocessing-Notebook nicht gefunden: {prep_nb}")
+        sys.exit(1)
+
     print("\n========================================================")
     print("   Pipeline vollständig ausgeführt!")
     print("========================================================")
