@@ -3,19 +3,17 @@ import subprocess
 import sys
 from pathlib import Path
 import time
+from datetime import datetime
 
-# Basisverzeichnis (Ordner in dem dieses Skript liegt)
+# ----------------------------------------------- Basisverzeichnis definieren -----------------------------------------------
 BASE_DIR = Path(__file__).parent.resolve()
 
 def run_notebook(notebook_path):
-    """Führt ein Notebook aus und speichert es inplace."""
+    # ------------------------- Führt ein Notebook aus und speichert es inplace. -------------------------
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Starte: {notebook_path.name}")
     try:
         start_time = time.time()
-        # Verwende jupyter nbconvert via subprocess
-        # --execute: Führt Zellen aus
-        # --inplace: Speichert Ergebnisse in der gleichen Datei
-        # --to notebook: Zielformat
+        # ------------------------- Jupyter nbconvert via subprocess ausführen -------------------------
         cmd = [
             sys.executable, "-m", "jupyter", "nbconvert",
             "--to", "notebook",
@@ -37,15 +35,13 @@ def run_notebook(notebook_path):
         print(f"  -> UNERWARTETER FEHLER: {e}")
         return False
 
-from datetime import datetime
-
 def main():
     print("========================================================")
     print("   Starte Ausführung der Jupyter Notebook Pipeline")
     print("========================================================")
     print(f"Basisverzeichnis: {BASE_DIR}\n")
 
-    # Liste der auszuführenden Schritte (1-4 sind einzelne Dateien)
+    # ----------------------------------------- Schritte definieren -----------------------------------------
     steps = [
         # 1. Akquise
         BASE_DIR / "1.1_Data-Acquisition-Wrapper" / "Data-Acquisition-Wrapper.ipynb",
@@ -60,7 +56,7 @@ def main():
         BASE_DIR / "2.3_Temperature_Analysis" / "Temperature_Analysis.ipynb"
     ]
 
-    # Schritt 1-4 ausführen
+    # ----------------------------------------- Schritt 1-4 ausführen -----------------------------------------
     for i, nb_path in enumerate(steps, 1):
         if not nb_path.exists():
             print(f"WARNUNG: Datei nicht gefunden: {nb_path}")
@@ -73,25 +69,38 @@ def main():
             input("Taste drücken zum Beenden...")
             sys.exit(1)
 
-    # Schritt 5: Data Quality (Iterieren über Unterordner)
+    # -------------------------------- Poster Assets Generieren (Raw Data) --------------------------------
+    print(f"\n--- ZWISCHENSCHRITT: Poster Assets Generieren (Raw Data) ---")
+    asset_script = BASE_DIR / "generate_poster_assets.py"
+    if asset_script.exists():
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Starte: {asset_script.name}")
+        try:
+            cmd = [sys.executable, str(asset_script)]
+            subprocess.run(cmd, check=True)
+            print("  -> Assets erfolgreich erstellt.")
+        except subprocess.CalledProcessError as e:
+            print(f"  -> FEHLER beim Erstellen der Assets: {e}")
+    else:
+        print(f"Warnung: {asset_script.name} nicht gefunden.")
+
+    # ----------------------------- Schritt 5: Data Quality (Iterieren über Unterordner) -----------------------------
     print(f"\n--- Schritt 5: 2.4_Data-Quality_Ionic-Balance-Error ---")
     dq_root = BASE_DIR / "2.4_Data-Quality_Ionic-Balance-Error"
     
     if not dq_root.exists():
         print(f"WARNUNG: Ordner nicht gefunden: {dq_root}")
     else:
-        # Alle Unterordner finden
+        # ------------------------------------- Alle Unterordner finden -------------------------------------
         subfolders = [f for f in dq_root.iterdir() if f.is_dir()]
         print(f"Gefundene Varianten: {[f.name for f in subfolders]}")
         
         for sub in subfolders:
             print(f"\n  > Verarbeite Variante: {sub.name}")
             
-            # Ablauf a und b
             nb_a = sub / "1.1_Data-Quality_Raw_Data.ipynb"
             nb_b = sub / "1.2_Data-Quality_Adjusted_Data.ipynb"
             
-            # Ausführen wenn vorhanden
+            # -------------------------------- Notebooks ausführen wenn vorhanden --------------------------------
             if nb_a.exists():
                 if not run_notebook(nb_a): 
                     print("Warnung: Fehler in 1.1, fahre dennoch fort...")
@@ -100,7 +109,7 @@ def main():
                 if not run_notebook(nb_b):
                     print("Warnung: Fehler in 1.2, fahre dennoch fort...")
 
-    # Schritt 6: Filter Database (Erzeugt neue DB Version)
+    # ----------------------------- Schritt 6: Filter Database (Erzeugt neue DB Version) -----------------------------
     print(f"\n--- Schritt 6: 2.4_Filter_Database (IBE Filter) ---")
     filter_nb = dq_root / "2.4_Filter_Database.ipynb"
     if filter_nb.exists():
@@ -112,7 +121,7 @@ def main():
         print(f"Fehler: Filter-Notebook nicht gefunden: {filter_nb}")
         sys.exit(1)
 
-    # Schritt 7: Preprocessing
+    # ----------------------------------------- Schritt 7: Preprocessing -----------------------------------------
     print(f"\n--- Schritt 7: 3.1_Preprocessing ---")
     prep_nb = BASE_DIR / "3.1_Preprocessing" / "Preprocessing.ipynb"
     if prep_nb.exists():
