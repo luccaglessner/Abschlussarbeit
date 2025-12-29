@@ -47,29 +47,87 @@ def get_latest_database():
     
     print(f"Lese Untermenge an Spalten: {len(use_cols)} Spalten gewählt.")
     
-    # --------------------------------------- SAFE MODE: 500.000 Zeilen laden ---------------------------------------
-    print("SAFE MODE: Lade erste 500.000 Zeilen...")
-    return pd.read_csv(db_path, usecols=use_cols, nrows=500000, low_memory=False)
+    # --------------------------------------- Alle Zeilen laden ---------------------------------------
+    print("Lade gesamten Datensatz...")
+    return pd.read_csv(db_path, usecols=use_cols, low_memory=False)
 
 def plot_temperature_histogram(df):
     # ----------------------------- Generiert ein Temperatur-Histogramm -----------------------------
     print("Generiere Temperatur Histogramm...")
     
-    # ----------------------------- Filter auf realistische Temperaturen (-5 bis 100) -----------------------------
-    temp_data = pd.to_numeric(df['temperature_in_c'], errors='coerce')
-    temp_data = temp_data[(temp_data > -5) & (temp_data < 100)]
+    # ----------------------------- Filter auf realistische Temperaturen (0 bis 500) -----------------------------
+    # Bereinigung: Kommas durch Punkte ersetzen und zu Numeric
+    raw_vals = df['temperature_in_c'].astype(str).str.replace(',', '.', regex=False)
+    temp_numeric = pd.to_numeric(raw_vals, errors='coerce')
     
-    plt.figure(figsize=(10, 6))
-    sns.histplot(temp_data, bins=50, color='#2c3e50', kde=True)
+    # Debug: Wie viele haben überhaupt Werte?
+    valid_vals_count = temp_numeric.notna().sum()
+    print(f"DEBUG: Anzahl Zeilen mit gültiger Temperatur (vor Filter): {valid_vals_count}")
+    
+    temp_data = temp_numeric[(temp_numeric >= 0) & (temp_numeric <= 500)]
+    
+    # -------------------------------- Statistiken berechnen --------------------------------
+    total_count = len(temp_data)
+    below_10 = len(temp_data[temp_data < 10])
+    above_10 = len(temp_data[temp_data >= 10])
+    
+    plt.figure(figsize=(8, 6))
+    
+    # ----------------------------- Plotten (Geteiltes Histogramm) -----------------------------
+    # Split Data
+    data_below = temp_data[temp_data < 10]
+    data_above = temp_data[temp_data >= 10]
+    
+    # Shared Bins
+    bins = np.linspace(0, 500, 101) # Linear bis 500
+    # Für Log-X Darstellung müssen wir Bins logarithmisch wählen?
+    # Nein, wir nutzen SymLog Skala für X oder Log Skala für Y.
+    # User wollte "Logarithmische Skala auf X" früher, aber hat dann gesagt "Log-Skala war schlecht".
+    # Wir bleiben bei Log-Y (wie im letzten Schritt akzeptiert/nicht bemängelt, nur die Datenmenge war falsch).
+    # UND wir nutzen lineare Bins auf der X-Achse aber zoomen rein? 
+    # Nein, 0-600 ist weit. Aber die meisten Werte sind <100.
+    # Wir nutzen np.logspace für bins?
+    # Wir nutzen einfache lineare Bins und Log-Y, wie vorher.
+    
+    # Farben wie IBE:
+    # "Good" (Dark Blue) = ??? User sagt "Das dunkle für die guten Werte".
+    # Annahme: >= 10°C ist das Ziel (Geothermie). -> Dark Blue.
+    # < 10°C -> Grey.
+    
+    sns.histplot(data_below, bins=bins, color='#8d94a7', alpha=0.8, edgecolor='#555', linewidth=0.5, label='< 10°C')
+    sns.histplot(data_above, bins=bins, color='#022541', alpha=1.0, edgecolor='#01182a', linewidth=0.5, label='≥ 10°C')
+    
     plt.title('Globale Grundwassertemperatur Verteilung', fontsize=16, fontweight='bold', pad=20)
     plt.xlabel('Temperatur [°C]', fontsize=14)
-    plt.ylabel('Anzahl', fontsize=14)
-    plt.grid(True, alpha=0.3)
+    plt.ylabel('Anzahl (Log-Skala)', fontsize=14)
+    plt.yscale('log')
+    plt.grid(True, alpha=0.3, which="both")
     
     # --------------------------------------- Mittelwert Linie hinzufügen ---------------------------------------
     mean_val = temp_data.mean()
     plt.axvline(mean_val, color='#e67e22', linestyle='--', linewidth=2, label=f'Mittelwert: {mean_val:.1f}°C')
-    plt.legend()
+
+    # --------------------------------------- 10°C Trennlinie hinzufügen ---------------------------------------
+    plt.axvline(10, color='red', linestyle='-', linewidth=2, label='10°C Grenze')
+    
+    # --------------------------------------- Statistik Text Box hinzufügen ---------------------------------------
+    # Farben anpassen / Position
+    stats_text = (
+        f"Analysiert Gesamt: {total_count:,}\n"
+        f"≥ 10°C: {above_10:,} ({above_10/total_count:.1%})\n"
+        f"< 10°C: {below_10:,} ({below_10/total_count:.1%})"
+    )
+    plt.text(
+        0.98, 0.60, stats_text, 
+        transform=plt.gca().transAxes, 
+        fontsize=11, 
+        verticalalignment='top', 
+        horizontalalignment='right',
+        bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='#ccc')
+    )
+    
+    # Legende nach oben
+    plt.legend(loc='upper right', bbox_to_anchor=(0.98, 0.98))
     
     plt.tight_layout()
     output_path = POSTER_ASSETS_DIR / "temp_histogram.png"
@@ -135,7 +193,7 @@ def plot_ibe_histogram(df):
     data = valid_ibe[(valid_ibe >= -display_range) & (valid_ibe <= display_range)]
     print(f"Statistik: Total={total_count}, Gut={good_count}, Schlecht={bad_count}")
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(8, 6))
     
     # ------------------------------------------ Daten aufteilen ------------------------------------------
     good_data = data[(data >= -5) & (data <= 5)]
