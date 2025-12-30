@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_c22f5355c53cbdc8a15b8c2a4c661224 {
+                #map_c4f61173507ecac3f89d11d6fe0a90f3 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -59,14 +59,14 @@
 <body>
     
     
-            <div class="folium-map" id="map_c22f5355c53cbdc8a15b8c2a4c661224" ></div>
+            <div class="folium-map" id="map_c4f61173507ecac3f89d11d6fe0a90f3" ></div>
         
 </body>
 <script>
     
     
-            var map_c22f5355c53cbdc8a15b8c2a4c661224 = L.map(
-                "map_c22f5355c53cbdc8a15b8c2a4c661224",
+            var map_c4f61173507ecac3f89d11d6fe0a90f3 = L.map(
+                "map_c4f61173507ecac3f89d11d6fe0a90f3",
                 {
                     center: [39.02010165514362, -100.90966119123826],
                     crs: L.CRS.EPSG3857,
@@ -78,13 +78,13 @@
 
                 }
             );
-            L.control.scale().addTo(map_c22f5355c53cbdc8a15b8c2a4c661224);
+            L.control.scale().addTo(map_c4f61173507ecac3f89d11d6fe0a90f3);
 
             
 
         
     
-            var tile_layer_5128d419c770b76bca85f933ee14d079 = L.tileLayer(
+            var tile_layer_b41681e38cd5005bd3452587b186cd1e = L.tileLayer(
                 "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {
   "minZoom": 0,
@@ -101,10 +101,10 @@
             );
         
     
-            tile_layer_5128d419c770b76bca85f933ee14d079.addTo(map_c22f5355c53cbdc8a15b8c2a4c661224);
+            tile_layer_b41681e38cd5005bd3452587b186cd1e.addTo(map_c4f61173507ecac3f89d11d6fe0a90f3);
         
     
-            var fast_marker_cluster_40e7c96bef4842a5f4a4488bcc3dd9ac = (function(){
+            var fast_marker_cluster_81b9a528f14fae4276d1d83773254578 = (function(){
                 
                 var callback = function (row) {
                     var icon = L.AwesomeMarkers.icon();
@@ -123,12 +123,12 @@
                     marker.addTo(cluster);
                 }
 
-                cluster.addTo(map_c22f5355c53cbdc8a15b8c2a4c661224);
+                cluster.addTo(map_c4f61173507ecac3f89d11d6fe0a90f3);
                 return cluster;
             })();
         
     
-            fast_marker_cluster_40e7c96bef4842a5f4a4488bcc3dd9ac.addTo(map_c22f5355c53cbdc8a15b8c2a4c661224);
+            fast_marker_cluster_81b9a528f14fae4276d1d83773254578.addTo(map_c4f61173507ecac3f89d11d6fe0a90f3);
         
     
             L.control.fullscreen(
@@ -138,26 +138,26 @@
   "titleCancel": "Exit Full Screen",
   "forceSeparateButton": false,
 }
-            ).addTo(map_c22f5355c53cbdc8a15b8c2a4c661224);
+            ).addTo(map_c4f61173507ecac3f89d11d6fe0a90f3);
         
     
-            var layer_control_1fef44078c40f1e48e22220b8807f127_layers = {
+            var layer_control_f8a5c958b703de2588331b4078e8f69c_layers = {
                 base_layers : {
-                    "openstreetmap" : tile_layer_5128d419c770b76bca85f933ee14d079,
+                    "openstreetmap" : tile_layer_b41681e38cd5005bd3452587b186cd1e,
                 },
                 overlays :  {
-                    "macro_element_40e7c96bef4842a5f4a4488bcc3dd9ac" : fast_marker_cluster_40e7c96bef4842a5f4a4488bcc3dd9ac,
+                    "macro_element_81b9a528f14fae4276d1d83773254578" : fast_marker_cluster_81b9a528f14fae4276d1d83773254578,
                 },
             };
-            let layer_control_1fef44078c40f1e48e22220b8807f127 = L.control.layers(
-                layer_control_1fef44078c40f1e48e22220b8807f127_layers.base_layers,
-                layer_control_1fef44078c40f1e48e22220b8807f127_layers.overlays,
+            let layer_control_f8a5c958b703de2588331b4078e8f69c = L.control.layers(
+                layer_control_f8a5c958b703de2588331b4078e8f69c_layers.base_layers,
+                layer_control_f8a5c958b703de2588331b4078e8f69c_layers.overlays,
                 {
   "position": "topright",
   "collapsed": true,
   "autoZIndex": true,
 }
-            ).addTo(map_c22f5355c53cbdc8a15b8c2a4c661224);
+            ).addTo(map_c4f61173507ecac3f89d11d6fe0a90f3);
 
         
 </script>
