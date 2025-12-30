@@ -221,21 +221,21 @@ def plot_ibe_histogram(df):
         f"Ausreißer: {bad_count:,} ({bad_count/total_count:.1%})"
     )
     plt.text(
-        0.02, 0.98, stats_text, 
+        0.98, 0.75, stats_text, 
         transform=plt.gca().transAxes, 
         fontsize=11, 
         verticalalignment='top', 
+        horizontalalignment='right',
         bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='#ccc')
     )
     
     # --------------------------------------- Formel hinzufügen ---------------------------------------
     formula_text = r"$IBE = \frac{\sum Kationen - \sum Anionen}{\sum Kationen + \sum Anionen} \cdot 100$"
     plt.text(
-        0.98, 0.75, formula_text,  # Etwas tiefer (0.75) für Abstand zur Legende
+        0.02, 0.98, formula_text,  
         transform=plt.gca().transAxes, 
         fontsize=12, 
         verticalalignment='top', 
-        horizontalalignment='right',
         bbox=dict(boxstyle='round', facecolor='#f8f9fa', alpha=0.9, edgecolor='#ccc')
     )
     

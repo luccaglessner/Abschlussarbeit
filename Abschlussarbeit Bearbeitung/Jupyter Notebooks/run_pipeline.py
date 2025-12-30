@@ -133,6 +133,24 @@ def main():
         print(f"Fehler: Preprocessing-Notebook nicht gefunden: {prep_nb}")
         sys.exit(1)
 
+    # ----------------------------------------- Schritt 8: MiniSom -----------------------------------------
+    print(f"\n--- Schritt 8: 3.2_Machine-Learning (MiniSom) ---")
+    minisom_nb = BASE_DIR / "3.2_Machine-Learning" / "MiniSom" / "MiniSom_Machine-Learning.ipynb"
+    if minisom_nb.exists():
+        if not run_notebook(minisom_nb):
+            print("WARNUNG: Fehler in MiniSom! (Pipeline läuft weiter)")
+    else:
+        print(f"Fehler: MiniSom-Notebook nicht gefunden: {minisom_nb}")
+
+    # ----------------------------------------- Schritt 9: IntraSom -----------------------------------------
+    print(f"\n--- Schritt 9: 3.2_Machine-Learning (IntraSom) ---")
+    intrasom_nb = BASE_DIR / "3.2_Machine-Learning" / "IntraSom" / "IntraSom_Machine-Learning.ipynb"
+    if intrasom_nb.exists():
+        if not run_notebook(intrasom_nb):
+            print("WARNUNG: Fehler in IntraSom! (Pipeline läuft weiter)")
+    else:
+        print(f"Fehler: IntraSom-Notebook nicht gefunden: {intrasom_nb}")
+
     print("\n========================================================")
     print("   Pipeline vollständig ausgeführt!")
     print("========================================================")
