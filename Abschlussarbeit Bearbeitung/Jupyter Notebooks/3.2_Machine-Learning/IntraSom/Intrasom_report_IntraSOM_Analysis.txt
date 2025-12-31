@@ -33,5 +33,5 @@ Final Ratio: 1
 --------------------------------------------------
 Training Evaluation:
 
-Quantization Error: 2.003
-Topographic Error: 0.2893
+Quantization Error: 1.2628
+Topographic Error: 0.2545

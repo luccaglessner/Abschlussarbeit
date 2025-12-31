@@ -1,10 +1,10 @@
 ﻿location,well_or_spring_name,WGS84_latitude,WGS84_longitude,depth_bgl_in_m,rock_type,stratigraphic_period,temperature_in_c,electrical_conductivity_25c_in_uS/cm,pH,redox_potential_in_mV,total_dissolved_solids_in_mmol/L,O2_in_mmol/L,Na_in_mmol/L,Mg_in_mmol/L,Ca_in_mmol/L,Cl_in_mmol/L,SO4_in_mmol/L,HCO3_in_mmol/L,Li_in_mmol/L,K_in_mmol/L,Sr_in_umol/L,NH4_in_umol/L,Fe_in_mmol/L,Mn_in_mmol/L,F_in_umol/L,NO3_in_mmol/L,H2SiO3_in_umol/L,HS_in_mmol/L,Database_number,Database_name
 Nevado de Chillan Vn.,ATF,-36.86333,-71.37667,,Andesite,,68.0,,3.9,,,,56.0,33.1,105.4,0.25,552.0,18.0,,21.48,78.6,,,,,,,,13,
 Nevado de Chillan Vn.,ATF,-36.86333,-71.37667,,Andesite,,82.0,,2.6,,,,20.0,6.18,10.0,16.62,293.76,,,4.45,47.5,,,,,,,,13,
-Nevado de Chillan Vn.,ATF,-36.86333,-71.37667,,Andesite,,91.0,,2.4,,,,26.6,,52.0,11.82,881.79,58.1,,81.3,143.0,,,,,,,,13,
+Nevado de Chillan Vn.,ATF,-36.86333,-71.37667,,Andesite,,91.0,,2.4,,,,58.1,52.0,81.3,11.82,881.79,0.0,,26.6,143.0,,,,,,,,13,
 Trapa Trapa,LOFS,-37.82667,-71.13,,Andesite,,45.0,,7.8,,,,134.0,3.2,29.0,178.0,14.4,76.88,,1.7,305.0,,,,,,,,13,
-Copahue Vn.,LOFS,-37.85,-71.17,,Andesite,,87.0,,2.7,,,,12.5,,24.2,0.22,2258.0,22.9,,35.5,141.0,,,,,,,,13,
-Copahue Vn.,LOFS,-37.85,-71.17,,Andesite,,93.0,,3.6,,,,12.4,,2.4,0.32,414.52,27.7,,20.9,87.2,,,,,,,,13,
+Copahue Vn.,LOFS,-37.85,-71.17,,Andesite,,87.0,,2.7,,,,22.9,24.2,35.5,0.22,2258.0,0.0,,12.5,141.0,,,,,,,,13,
+Copahue Vn.,LOFS,-37.85,-71.17,,Andesite,,93.0,,3.6,,,,27.7,2.4,20.9,0.32,414.52,0.0,,12.4,87.2,,,,,,,,13,
 Copahue Vn.,LOFS,-37.85,-71.17,,Andesite,,88.0,,2.2,,,,4.75,1.88,2.34,2.5,1336.19,,,2.75,27.4,,,,,,,,13,
 Pucon Mahuida,LOFS,-37.85,-71.17,,Andesite,,47.0,,7.9,,,,440.0,294.0,172.0,274.0,841.0,1550.0,,108.0,816.0,,,,,,,,13,
 Termas del Avellano,LOFS,-37.99123,-71.53136,,Andesite,,78.0,,7.7,,,,246.0,0.2,34.0,273.0,173.0,52.0,,12.3,756.0,,,,,,,,13,
