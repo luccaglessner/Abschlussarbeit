@@ -3,8 +3,8 @@ Project: IntraSOM_Analysis
 
 Input Data:
 Features: 6
-Samples: 6790
-Cells: 40740
+Samples: 5454
+Cells: 32724
 
 --------------------------------------------------
 Initialization Parameters:
@@ -33,5 +33,5 @@ Final Ratio: 1
 --------------------------------------------------
 Training Evaluation:
 
-Quantization Error: 1.8383
-Topographic Error: 0.2199
+Quantization Error: 2.003
+Topographic Error: 0.2893
