@@ -23,7 +23,6 @@ __pycache__/
 !**/GLiM-Kartierung/
 
 # Large & Binary Files (Global Ignore)
-# These rules might conflict with the source folders, so we whitelist those folders specifically above
 *.csv
 *.pdf
 *.zip
