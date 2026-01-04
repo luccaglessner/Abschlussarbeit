@@ -3,6 +3,9 @@ Ausführungsreihenfolge der Jupyter Notebooks
 
 Dieses Dokument beschreibt die empfohlene Reihenfolge der Ausführung aller Jupyter Notebooks in diesem Projekt. Diese Reihenfolge stellt sicher, dass alle benötigten Input-Dateien für nachfolgende Notebooks korrekt generiert wurden.
 
+-> run_pipeline_Data-Acquisition-Wrapper.py [1. Pipeline zum Ausführen]
+-> run_pipeline_Analysis-and-Learning.py [2. Pipeline zum Ausführen]
+
 --------------------------------------------------------------------------------------------------
 0. 0_Überprüfung_geeigneter_Datenbanken
    - Pfad: `0_Überprüfung_geeigneter_Datenbanken/Überprüfung_geeigneter_Datenbanken.ipynb`
@@ -31,7 +34,7 @@ Dieses Dokument beschreibt die empfohlene Reihenfolge der Ausführung aller Jupy
    - Pfad: `2.1_Explorative-Datenanalyse/Data_Exploration.ipynb`
    - Zweck: Allgemeine explorative Analyse der Daten.
 
-3. 2.2_Rock-Type_Analysis [Verwendung nur für "without_added_rock-types"
+3. 2.2_Rock-Type_Analysis [Verwendung nur für "without_added_rock-types"]
    - Pfad: `2.2_Rock-Type_Analysis/Rock-Type_Analyzer.ipynb`
    - Zweck: Vergleicht die Datenqualität und -verteilung vor und nach dem Rock-Type Mapping.
    - Abhängigkeit: Benötigt Outputs von 1.1 UND 1.2.
@@ -67,8 +70,8 @@ Dieses Dokument beschreibt die empfohlene Reihenfolge der Ausführung aller Jupy
    - Ausführung: Beide Notebooks sind unabhängig voneinander ausführbar, benötigen aber den Output von 3.1.
 
 Zusammenfassung der Kette:
-1.1 -> 1.2 -> (2.x Analysen)
-1.1 -> 3.1 -> 3.2 (ML)
+1.1 -> 1.2 -> 2.x Analysen
+1.1 -> 3.1 -> 3.2 (ML) -> 4.x Synthetische Daten
 
 -------------------
 
