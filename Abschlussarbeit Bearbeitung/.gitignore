@@ -7,7 +7,6 @@ __pycache__/
 *.ipynb_checkpoints
 
 # Project Data Outputs (Timestamped Folders)
-# Excludes all folders starting with Year 202x (e.g., 2025-01-04_...)
 **/202[0-9]-*
 **/202[0-9]_*
 **/Run_202[0-9]-*
@@ -18,8 +17,10 @@ __pycache__/
 **/IntraSom_Results/
 **/Zwischenst*nde/
 **/Kartierung/
+**/Gesammelte_Datenbanken/
+**/GLiM-Kartierung/
 
-# Large Files
+# Large & Binary Files
 *.csv
 *.pdf
 *.zip
@@ -27,7 +28,14 @@ __pycache__/
 *.h5
 *.pt
 *.xlsx
+*.xls
+*.docx
+*.doc
+*.url
+*.asc
+*.tmp
+~$*
 
-# Exceptions (if specific READMEs or small config/mappings are needed)
+# Exceptions
 !**/README.md
 !**/*_Mapping.csv
