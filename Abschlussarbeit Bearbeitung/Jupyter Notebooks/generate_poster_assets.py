@@ -13,7 +13,7 @@ sns.set_context("talk")
 # ----------------------------------------------- Pfade definieren -----------------------------------------------
 BASE_DIR = Path.cwd()
 POSTER_ASSETS_DIR = Path("../../Posterpräsentation/assets")
-DATA_DIR = BASE_DIR / "1.1_Data-Acquisition-Wrapper/Angepasste_Datenbanken/Komplette_Datenbank"
+DATA_DIR = BASE_DIR / "1_Acquisition/1.1_Data-Acquisition-Wrapper/Angepasste_Datenbanken/Komplette_Datenbank"
 
 # ----------------------------------- Assets Ordner erstellen falls nicht vorhanden -----------------------------------
 POSTER_ASSETS_DIR.mkdir(parents=True, exist_ok=True)

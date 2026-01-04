@@ -42,7 +42,7 @@ def main():
     print(f"Basisverzeichnis: {BASE_DIR}\n")
 
     # ----------------------------------------- Schritt 1: Akquise -----------------------------------------
-    step_1 = BASE_DIR / "1.1_Data-Acquisition-Wrapper" / "Data-Acquisition-Wrapper.ipynb"
+    step_1 = BASE_DIR / "1_Acquisition/1.1_Data-Acquisition-Wrapper" / "Data-Acquisition-Wrapper.ipynb"
     
     if not step_1.exists():
         print(f"WARNUNG: Datei nicht gefunden: {step_1}")

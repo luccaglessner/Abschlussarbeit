@@ -1,0 +1,33 @@
+
+# Python & Jupyter
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Project Data Outputs (Timestamped Folders)
+# Excludes all folders starting with Year 202x (e.g., 2025-01-04_...)
+**/202[0-9]-*
+**/202[0-9]_*
+**/Run_202[0-9]-*
+
+# Large Data & Results Folders
+**/Angepasste_Datenbanken/
+**/MiniSom_Results/
+**/IntraSom_Results/
+**/Zwischenst*nde/
+**/Kartierung/
+
+# Large Files
+*.csv
+*.pdf
+*.zip
+*.pkl
+*.h5
+*.pt
+*.xlsx
+
+# Exceptions (if specific READMEs or small config/mappings are needed)
+!**/README.md
+!**/*_Mapping.csv

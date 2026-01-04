@@ -4,7 +4,7 @@ from pathlib import Path
 
 # ----------------------------------------------- Pfade definieren -----------------------------------------------
 BASE_DIR = Path.cwd()
-DATA_DIR = BASE_DIR / "1.1_Data-Acquisition-Wrapper/Angepasste_Datenbanken/Komplette_Datenbank"
+DATA_DIR = BASE_DIR / "1_Acquisition/1.1_Data-Acquisition-Wrapper/Angepasste_Datenbanken/Komplette_Datenbank"
 
 def get_latest_database():
     # ------------------ Spezifische Rohdatenbank vom 27.12. nutzen (Große Datei, unbereinigt) ------------------
