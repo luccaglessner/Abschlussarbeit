@@ -1,0 +1,49 @@
+Ethiopia 🟧
+https://www.researchgate.net/publication/354273627_Geothermal_energy_resources_in_Ethiopia_Status_review_and_insights_from_hydrochemistry_of_surface_and_groundwaters
+
+OoL_supplementary 🟧
+https://webapps.bgs.ac.uk/services/ngdc/accessions/index.html
+
+Gorontalo 🟧
+https://zenodo.org/records/45631#:~:text=These%20files%20are%20the%20dataset,1
+
+----------------------------------
+
+ALPS_Datenbank ✅ 2
+https://doi.pangaea.de/10.1594/PANGAEA.916088
+
+ARGONNE_Datenbank ✅ 1
+https://catalog.data.gov/dataset/argonne-geothermal-geochemical-database-v2-0-53978/resource/35bedd29-61f0-418e-8233-0511640a8d9e#:~:text=Argonne%20Geothermal%20Geochemical%20Database%20v2_00
+
+Australia Mataranka ✅ 8
+https://www.nature.com/articles/s41598-021-03701-1?error=cookies_not_supported&code=d245a11e-6034-45f3-b6f9-c53fc736651e#article-info
+
+CAES2024_Datenbank ✅
+https://gdr.openei.org/submissions/425
+
+Gandaki Province, Nepal ✅ 5
+https://www.cell.com/heliyon/fulltext/S2405-8440(23)04561-9?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS2405844023045619%3Fshowall%3Dtrue
+
+HESSEN_Datenbank ✅ 6
+https://essd.copernicus.org/articles/13/4847/2021/
+
+MDPI_Tibet_Datenbank ✅
+https://www.mdpi.com/2073-4441/14/1/132
+
+MDPI Xianshuihe ✅ 7
+https://www.mdpi.com/2073-4441/14/4/550#:~:text=The%2043%20hot%20springs%20were,rate%20of%20slip%20in%20the
+
+REFLECT_Datenbank ✅
+https://www.reflect-h2020.eu/efa/#form1
+
+SVZ-CHILE_Datenbank ✅ 3
+https://repositorio.uchile.cl/bitstream/handle/2250/149568/Geochemistry-of-thermal-waters.pdf
+
+Thailand ✅ 9
+https://www.tshe.org/ea/pdf/EA14(3)/EA14(3)_04.pdf#:~:text=Geochemical%20data%20from%20more%20than,The%20geochemical%20data
+
+USGS_Datenbank ✅
+https://www.sciencebase.gov/catalog/item/59d25d63e4b05fe04cc235f9
+
+Yukon Geothermal Springs ✅ 4
+https://open.yukon.ca/data/geothermal-thermal-springs

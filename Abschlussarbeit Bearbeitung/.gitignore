@@ -45,3 +45,7 @@ __pycache__/
 # General Exceptions
 !**/README.md
 !**/*_Mapping.csv
+
+# Restore Zwischenstände and contents
+!**/Zwischenst*nde/
+!**/Zwischenst*nde/**
