@@ -3,16 +3,16 @@
 # --------------------------------------
 
 # [1.1] Datenbanken (riesige CSV/XLSX)
-/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1.1_Data-Acquisition-Wrapper/Angepasste_Datenbanken/Komplette_Datenbank/
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1_Acquisition/1.1_Data-Acquisition-Wrapper/Angepasste_Datenbanken/Komplette_Datenbank/
 
 # [1.2] Rock-Type Mapping
-/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1.2_Rock-Type-Mapping/Rock-Type_Mapping/
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1_Acquisition/1.2_Rock-Type-Mapping/Rock-Type_Mapping/
 
 # [2.1] Explorative Datenanalyse
-/Abschlussarbeit Bearbeitung/Jupyter Notebooks/2.1_Explorative-Datenanalyse/Datenanalyse/
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/2_Analysis/2.1_Explorative-Datenanalyse/Datenanalyse/
 
 # [2.2] Rock-Type Analysis
-/Abschlussarbeit Bearbeitung/Jupyter Notebooks/2.2_Rock-Type_Analysis/Rock-Type_Analysis/
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/2_Analysis/2.2_Rock-Type_Analysis/Rock-Type_Analysis/
 
 # [Zusatz] Python Auslagerung
 /Abschlussarbeit Bearbeitung/Jupyter Notebooks/Zusatz_Python-Auslagerung/Input_formatted_xlsx/
@@ -28,7 +28,7 @@
 *.html
 !/Abschlussarbeit Bearbeitung/Wrapper_Website/templates/
 !/Abschlussarbeit Bearbeitung/Wrapper_Website/templates/**/*.html
-!/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1.1_Data-Acquisition-Wrapper/Kartierung/**/*.html
+!/Abschlussarbeit Bearbeitung/Jupyter Notebooks/1_Acquisition/1.1_Data-Acquisition-Wrapper/Kartierung/**/*.html
 
 # ZIP-Dateien (wie dein Jupyter Notebooks.zip)
 *.zip
@@ -49,7 +49,7 @@ __pycache__/
 .antigravity/tmp/
 .antigravity/runtime/
 # [3.1] Preprocessing Output
-/Abschlussarbeit Bearbeitung/Jupyter Notebooks/3.1_Preprocessing/Preprocessing/
+/Abschlussarbeit Bearbeitung/Jupyter Notebooks/3_Machine-Learning/3.1_Preprocessing/Preprocessing/
 
 # Posterpräsentation
 /Posterpräsentation/
