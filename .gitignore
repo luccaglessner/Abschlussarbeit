@@ -53,3 +53,9 @@ __pycache__/
 
 # Posterpräsentation
 /Posterpräsentation/
+
+# Model Weights
+*.pth
+*.h5
+*.onnx
+*.pkl
