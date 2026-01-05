@@ -138,9 +138,9 @@ def main():
     else:
         print(f"Fehler: MiniSom-Notebook nicht gefunden: {minisom_nb}")
 
-    # ----------------------------------------- Schritt 9: 4.1 Synthetic Data Generation -----------------------------------------
-    print(f"\n--- Schritt 9: 4_Synthetic-Data/4.1_Synthetic-Data (VAE Generation) ---")
-    vae_nb = BASE_DIR / "4_Synthetic-Data/4.1_Synthetic-Data" / "Variational-Autoencoder" / "VAE_Synthetic_Data_Generation.ipynb"
+    # ----------------------------------------- Schritt 9: 5.1 Synthetic Data Generation -----------------------------------------
+    print(f"\n--- Schritt 9: 5_Synthetic-Data/5.1_Synthetic-Data (VAE Generation) ---")
+    vae_nb = BASE_DIR / "5_Synthetic-Data/5.1_Synthetic-Data" / "Variational-Autoencoder" / "VAE_Synthetic_Data_Generation.ipynb"
     if vae_nb.exists():
         if not run_notebook(vae_nb): 
             print("WARNUNG: Fehler bei VAE Generation! Pipeline wird gestoppt.")
@@ -149,25 +149,25 @@ def main():
     else:
         print(f"Fehler: VAE-Notebook nicht gefunden: {vae_nb}")
 
-    # ----------------------------------------- Schritt 10: 4.2 Preprocessing (Synthetic) -----------------------------------------
-    print(f"\n--- Schritt 10: 4_Synthetic-Data/4.2_Preprocessing (Synthetic) ---")
-    prep_syn_nb = BASE_DIR / "4_Synthetic-Data/4.2_Preprocessing" / "Preprocessing.ipynb"
+    # ----------------------------------------- Schritt 10: 5.2 Preprocessing (Synthetic) -----------------------------------------
+    print(f"\n--- Schritt 10: 5_Synthetic-Data/5.2_Preprocessing (Synthetic) ---")
+    prep_syn_nb = BASE_DIR / "5_Synthetic-Data/5.2_Preprocessing" / "Preprocessing.ipynb"
     if prep_syn_nb.exists():
         if not run_notebook(prep_syn_nb):
             print("FEHLER im Synthetic Preprocessing! Pipeline wird gestoppt.")
             input("Taste drücken zum Beenden...")
             sys.exit(1)
     else:
-        print(f"Fehler: Preprocessing-Notebook (4.2) nicht gefunden: {prep_syn_nb}")
+        print(f"Fehler: Preprocessing-Notebook (5.2) nicht gefunden: {prep_syn_nb}")
 
-    # ----------------------------------------- Schritt 11: 4.3 Machine-Learning (MiniSom Synthetic) -----------------------------------------
-    print(f"\n--- Schritt 11: 4_Synthetic-Data/4.3_Machine-Learning (MiniSom Synthetic) ---")
-    minisom_syn_nb = BASE_DIR / "4_Synthetic-Data/4.3_Machine-Learning" / "MiniSom" / "MiniSom_Machine-Learning.ipynb"
+    # ----------------------------------------- Schritt 11: 5.3 Machine-Learning (MiniSom Synthetic) -----------------------------------------
+    print(f"\n--- Schritt 11: 5_Synthetic-Data/5.3_Machine-Learning (MiniSom Synthetic) ---")
+    minisom_syn_nb = BASE_DIR / "5_Synthetic-Data/5.3_Machine-Learning" / "MiniSom" / "MiniSom_Machine-Learning.ipynb"
     if minisom_syn_nb.exists():
         if not run_notebook(minisom_syn_nb):
             print("WARNUNG: Fehler in MiniSom (Synthetic)! (Pipeline läuft weiter)")
     else:
-        print(f"Fehler: MiniSom-Notebook (4.3) nicht gefunden: {minisom_syn_nb}")
+        print(f"Fehler: MiniSom-Notebook (5.3) nicht gefunden: {minisom_syn_nb}")
 
     print("\n========================================================")
     print("   Analysis and Learning Pipeline vollständig ausgeführt!")
