@@ -1,0 +1,363 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "imports",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:21.535404Z",
+     "iopub.status.busy": "2026-01-05T22:11:21.533888Z",
+     "iopub.status.idle": "2026-01-05T22:11:24.743860Z",
+     "shell.execute_reply": "2026-01-05T22:11:24.743860Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "import os\n",
+    "from pathlib import Path\n",
+    "from datetime import datetime\n",
+    "from sklearn.preprocessing import QuantileTransformer\n",
+    "from matplotlib.backends.backend_pdf import PdfPages"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "config",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:24.748407Z",
+     "iopub.status.busy": "2026-01-05T22:11:24.747354Z",
+     "iopub.status.idle": "2026-01-05T22:11:24.752473Z",
+     "shell.execute_reply": "2026-01-05T22:11:24.752473Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "pd.set_option('display.max_columns', None)\n",
+    "sns.set_theme(style=\"whitegrid\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "load_data_imputed",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:24.756513Z",
+     "iopub.status.busy": "2026-01-05T22:11:24.756513Z",
+     "iopub.status.idle": "2026-01-05T22:11:26.212386Z",
+     "shell.execute_reply": "2026-01-05T22:11:26.212386Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Verwendeter Datenbankpfad:\n",
+      "C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\4_Imputation\\4.1_Imputation\\Imputed_Data_Raw.csv\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Datensatz geladen mit 175099 Zeilen und 32 Spalten.\n"
+     ]
+    }
+   ],
+   "source": [
+    "\n",
+    "# ------------------------- Basisverzeichnis -------------------------\n",
+    "base_dir = Path.cwd()\n",
+    "\n",
+    "# ------------------------- Pfad zur imputierten Datenbank (Output 4.1) -------------------------\n",
+    "# Wir gehen davon aus, dass 4.1 parallel zu 4.2 liegt\n",
+    "# ../4.1_Imputation/Imputed_Data_Raw.csv\n",
+    "input_path = base_dir.parent / \"4.1_Imputation\" / \"Imputed_Data_Raw.csv\"\n",
+    "\n",
+    "print(\"Verwendeter Datenbankpfad:\")\n",
+    "print(input_path)\n",
+    "\n",
+    "if not input_path.exists():\n",
+    "    raise FileNotFoundError(f\"Imputation-File nicht gefunden: {input_path}\")\n",
+    "\n",
+    "df = pd.read_csv(input_path, low_memory=False)\n",
+    "print(f\"Datensatz geladen mit {df.shape[0]} Zeilen und {df.shape[1]} Spalten.\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "header_md",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "    <b>4.2 Preprocessing (Imputed Data)</b><br>\n",
+    "    Adaptiert von 3.1 Preprocessing.\n",
+    "    <br>\n",
+    "    <b>1. Log-Transformation</b> (np.log1p)<br>\n",
+    "    <b>2. Robust Scaling</b> (QuantileTransformer)<br>\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "setup_output",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:26.216494Z",
+     "iopub.status.busy": "2026-01-05T22:11:26.216494Z",
+     "iopub.status.idle": "2026-01-05T22:11:26.221953Z",
+     "shell.execute_reply": "2026-01-05T22:11:26.221392Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Output Ordner: C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\4_Imputation\\4.2_Preprocessing\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Ausgabeverzeichnis -------------------------\n",
+    "output_dir = base_dir\n",
+    "# (Kein Zeitstempel-Unterordner n\u00f6tig, da wir \u00fcberschreiben oder direkt nutzen wollen in 4.3)\n",
+    "# Oder doch Zeitstempel? Pipeline-Standard ist oft Zeitstempel.\n",
+    "# Wir machen es einfach: Direkt in den Ordner f\u00fcr den einfachen Zugriff in 4.3\n",
+    "print(f\"Output Ordner: {output_dir}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "define_exclusions",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:26.226070Z",
+     "iopub.status.busy": "2026-01-05T22:11:26.225543Z",
+     "iopub.status.idle": "2026-01-05T22:11:26.240127Z",
+     "shell.execute_reply": "2026-01-05T22:11:26.239372Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "19 numerische Spalten sollten transformiert werden\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Spaltenausschluss -------------------------\n",
+    "EXCLUDE_COLS = [\n",
+    "    \"WGS84_latitude\",\n",
+    "    \"WGS84_longitude\",\n",
+    "    \"Database_number\",\n",
+    "    \"id\",                 \n",
+    "    \"index\",\n",
+    "    \"temperature_in_c\",\n",
+    "    \"rock_type\",\n",
+    "    \"IBE\", \"IBE_Calculated\" # IBE nicht transformieren\n",
+    "]\n",
+    "\n",
+    "numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()\n",
+    "transform_candidates = [c for c in numeric_cols if c not in EXCLUDE_COLS]\n",
+    "\n",
+    "print(f\"{len(transform_candidates)} numerische Spalten sollten transformiert werden\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "log_transform",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:26.244565Z",
+     "iopub.status.busy": "2026-01-05T22:11:26.244031Z",
+     "iopub.status.idle": "2026-01-05T22:11:30.754546Z",
+     "shell.execute_reply": "2026-01-05T22:11:30.754546Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Log-Report erstellt: C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\4_Imputation\\4.2_Preprocessing\\Log_Transformation_Report.pdf\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Log-Transformation -------------------------\n",
+    "skewness = df[transform_candidates].skew().sort_values(ascending=False)\n",
+    "skewed_cols = skewness[abs(skewness) > 1.0].index.tolist()\n",
+    "\n",
+    "df_base = df.copy()\n",
+    "base_cols = []\n",
+    "\n",
+    "pdf_log_path = output_dir / \"Log_Transformation_Report.pdf\"\n",
+    "\n",
+    "with PdfPages(pdf_log_path) as pdf:\n",
+    "    fig = plt.figure(figsize=(10, 6))\n",
+    "    plt.text(0.5, 0.5, f\"Log-Transformation Report (Imputed Data)\", ha='center', va='center', fontsize=16)\n",
+    "    plt.axis('off')\n",
+    "    pdf.savefig(fig)\n",
+    "    plt.close()\n",
+    "\n",
+    "    for col in transform_candidates:\n",
+    "        # Check auf negative Werte f\u00fcr log1p (sollten in Raw geochemie nicht vorkommen, aber sicher ist sicher)\n",
+    "        if df[col].min() >= 0 and col in skewed_cols:\n",
+    "            new_col = f\"{col}_log\"\n",
+    "            df_base[new_col] = np.log1p(df[col])\n",
+    "            base_cols.append(new_col)\n",
+    "            \n",
+    "            # Plot (optional kurzer Check)\n",
+    "            fig, axes = plt.subplots(1, 2, figsize=(12, 4))\n",
+    "            sns.histplot(df[col].dropna(), bins=30, ax=axes[0], color=\"skyblue\", kde=True)\n",
+    "            axes[0].set_title(f\"Orig: {col}\")\n",
+    "            sns.histplot(df_base[new_col].dropna(), bins=30, ax=axes[1], color=\"lightgreen\", kde=True)\n",
+    "            axes[1].set_title(f\"Transformed: ln(1 + {col})\")\n",
+    "            plt.tight_layout()\n",
+    "            pdf.savefig(fig)\n",
+    "            plt.close(fig)\n",
+    "        else:\n",
+    "            base_cols.append(col)\n",
+    "print(f\"Log-Report erstellt: {pdf_log_path}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "quantile_scaling",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:30.757597Z",
+     "iopub.status.busy": "2026-01-05T22:11:30.757597Z",
+     "iopub.status.idle": "2026-01-05T22:12:01.799070Z",
+     "shell.execute_reply": "2026-01-05T22:12:01.799070Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "STARTING GAUSSIAN SCALING EXECUTION\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Gaussian Report: C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\4_Imputation\\4.2_Preprocessing\\Gaussian_Scaling_Report.pdf\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Gaussian Scaling (QuantileTransformer) -------------------------\n",
+    "print('STARTING GAUSSIAN SCALING EXECUTION')\n",
+    "df_final = df_base.copy()\n",
+    "final_features = []\n",
+    "\n",
+    "pdf_report_path = output_dir / \"Gaussian_Scaling_Report.pdf\"\n",
+    "\n",
+    "with PdfPages(pdf_report_path) as pdf:\n",
+    "    fig = plt.figure(figsize=(10, 6))\n",
+    "    plt.text(0.5, 0.5, f\"Gaussian Scaling Report (Imputed Data)\", ha='center', va='center', fontsize=16)\n",
+    "    plt.axis('off')\n",
+    "    pdf.savefig(fig)\n",
+    "    plt.close()\n",
+    "\n",
+    "    for col in base_cols:\n",
+    "        full_series = df_base[col]\n",
+    "        valid_mask = full_series.notna()\n",
+    "        \n",
+    "        if valid_mask.sum() > 0:\n",
+    "            scaler_col = QuantileTransformer(output_distribution='normal', random_state=42)\n",
+    "            # Reshape f\u00fcr SKLearn\n",
+    "            vals = full_series.dropna().values.reshape(-1, 1)\n",
+    "            final_trans = scaler_col.fit_transform(vals).flatten()\n",
+    "            \n",
+    "            new_col_name = f\"{col}_gauss\"\n",
+    "            df_final.loc[valid_mask, new_col_name] = final_trans\n",
+    "            final_features.append(new_col_name)\n",
+    "            \n",
+    "            # Plot\n",
+    "            fig, axes = plt.subplots(1, 2, figsize=(12, 4))\n",
+    "            sns.histplot(full_series, bins=30, ax=axes[0], color=\"lightgreen\", kde=True)\n",
+    "            axes[0].set_title(f\"Input: {col}\")\n",
+    "            sns.histplot(final_trans, bins=30, ax=axes[1], color=\"crimson\", kde=True)\n",
+    "            axes[1].set_title(f\"Output: Gaussian Scaled\")\n",
+    "            plt.tight_layout()\n",
+    "            pdf.savefig(fig)\n",
+    "            plt.close(fig)\n",
+    "\n",
+    "print(f\"Gaussian Report: {pdf_report_path}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "save_final",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:01.801662Z",
+     "iopub.status.busy": "2026-01-05T22:12:01.801662Z",
+     "iopub.status.idle": "2026-01-05T22:12:07.161100Z",
+     "shell.execute_reply": "2026-01-05T22:12:07.161100Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "SOM Data gespeichert: C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\4_Imputation\\4.2_Preprocessing\\Preprocessed_SOM_Ready.csv\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Speichern -------------------------\n",
+    "output_file_som = output_dir / \"Preprocessed_SOM_Ready.csv\"\n",
+    "\n",
+    "# Nur relevante Spalten speichern\n",
+    "final_cols_to_save = EXCLUDE_COLS + final_features\n",
+    "final_cols_real = [c for c in final_cols_to_save if c in df_final.columns]\n",
+    "\n",
+    "df_final[final_cols_real].to_csv(output_file_som, index=False)\n",
+    "print(f\"SOM Data gespeichert: {output_file_som}\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

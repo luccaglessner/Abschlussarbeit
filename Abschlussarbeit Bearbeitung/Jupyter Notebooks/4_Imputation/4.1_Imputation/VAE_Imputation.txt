@@ -1,0 +1,640 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "588cf55a",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "    <b>4.1 VAE Imputation (Data Rescue)</b><br><br>\n",
+    "    <b>Ziel:</b> Rettung von Datenpunkten, die in Schritt 2.4 aufgrund fehlender Werte verworfen wurden.<br>\n",
+    "    <b>Strategie:</b><br>\n",
+    "    1. <b>Lernen:</b> Ein Variational Autoencoder (VAE) lernt die geochemischen Zusammenh\u00e4nge auf dem <b>bereinigten Datensatz</b> (aus 2.4 'Nach_IBF-und-Temp_Filter').<br>\n",
+    "    2. <b>Imputieren:</b> Das trainierte VAE wird genutzt, um fehlende Werte im <b>urspr\u00fcnglichen Rohdatensatz</b> (aus 1.1 'Nach_Acquisition') aufzuf\u00fcllen.<br>\n",
+    "    3. <b>Validieren:</b> Anwendung von physikalischen Constraints (Temp >= 10\u00b0C, IBE Pr\u00fcfung).<br>\n",
+    "    <br>\n",
+    "    <b>Output:</b> 'Imputed_Data_Raw.csv' - Ein Datensatz mit aufgef\u00fcllten L\u00fccken in Originaleinheiten.\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "9bfb25d7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:06:59.810645Z",
+     "iopub.status.busy": "2026-01-05T22:06:59.810140Z",
+     "iopub.status.idle": "2026-01-05T22:07:09.448846Z",
+     "shell.execute_reply": "2026-01-05T22:07:09.448846Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import torch\n",
+    "import torch.nn as nn\n",
+    "import torch.optim as optim\n",
+    "from torch.utils.data import DataLoader, TensorDataset\n",
+    "from sklearn.preprocessing import StandardScaler\n",
+    "from sklearn.impute import SimpleImputer\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "from pathlib import Path\n",
+    "import re\n",
+    "import os\n",
+    "\n",
+    "# ------------------------- Reproduzierbarkeit -------------------------\n",
+    "torch.manual_seed(42)\n",
+    "np.random.seed(42)\n",
+    "\n",
+    "sns.set(style=\"whitegrid\")\n",
+    "plt.rcParams['figure.figsize'] = (12, 6)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "df54f9e5",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "    <b>1. Daten Laden (Clean vs. Raw)</b>\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "06df6ef3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:07:09.453407Z",
+     "iopub.status.busy": "2026-01-05T22:07:09.451904Z",
+     "iopub.status.idle": "2026-01-05T22:07:10.571056Z",
+     "shell.execute_reply": "2026-01-05T22:07:10.570546Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Training auf Clean Data: 2026-01-05_23-05-35/Komplette_Datenbank.csv\n",
+      "Imputation auf Raw Data: 2026-01-05_22-58-07/Komplette_Datenbank.csv\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Clean Data Shape: (94264, 31)\n",
+      "Raw Data Shape:   (175099, 31)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Pfade definieren -------------------------\n",
+    "base_dir = Path.cwd()\n",
+    "if base_dir.name != \"4.1_Imputation\":\n",
+    "    # Fallback f\u00fcr Entwicklung, falls Notebook nicht im richtigen Ordner gestartet wurde\n",
+    "    # (Anpassen je nach Umgebung)\n",
+    "    pass\n",
+    "\n",
+    "notebooks_root = base_dir.parents[1]\n",
+    "\n",
+    "# ------------------------- Pfad 1: Bereinigte Daten (Training) - Output 2.4 -------------------------\n",
+    "clean_db_root = notebooks_root / \"1_Acquisition\" / \"1.1_Data-Acquisition-Wrapper\" / \"Angepasste_Datenbanken\" / \"Nach_IBF-und-Temp_Filter\" / \"Komplette_Datenbank\"\n",
+    "\n",
+    "# ------------------------- Pfad 2: Rohdaten (Imputation) - Output 1.1 -------------------------\n",
+    "raw_db_root = notebooks_root / \"1_Acquisition\" / \"1.1_Data-Acquisition-Wrapper\" / \"Angepasste_Datenbanken\" / \"Nach_Acquisition\" / \"Komplette_Datenbank\"\n",
+    "\n",
+    "# ------------------------- Hilfsfunktion zum Finden der neuesten CSV -------------------------\n",
+    "def get_latest_csv(root_path, name_marker=\"Komplette_Datenbank\"):\n",
+    "    if not root_path.exists():\n",
+    "        raise FileNotFoundError(f\"Pfad nicht gefunden: {root_path}\")\n",
+    "    \n",
+    "    # Alle Zeitstempel-Ordner\n",
+    "    folders = [f for f in root_path.iterdir() if f.is_dir()]\n",
+    "    if not folders:\n",
+    "        raise FileNotFoundError(f\"Keine Ordner in {root_path}\")\n",
+    "        \n",
+    "    # Sortieren nach Name (da Zeitstempel Format YYYY-MM-DD... ist das chronologisch)\n",
+    "    latest_folder = max(folders, key=lambda x: x.name)\n",
+    "    \n",
+    "    csv_files = list(latest_folder.glob(\"*.csv\"))\n",
+    "    if not csv_files:\n",
+    "         raise FileNotFoundError(f\"Keine CSV in {latest_folder}\")\n",
+    "            \n",
+    "    # Normalerweise gibt es nur eine, wir nehmen die erste/einzige\n",
+    "    return csv_files[0]\n",
+    "\n",
+    "\n",
+    "clean_csv_path = get_latest_csv(clean_db_root)\n",
+    "raw_csv_path = get_latest_csv(raw_db_root)\n",
+    "\n",
+    "print(f\"Training auf Clean Data: {clean_csv_path.parent.name}/{clean_csv_path.name}\")\n",
+    "print(f\"Imputation auf Raw Data: {raw_csv_path.parent.name}/{raw_csv_path.name}\")\n",
+    "\n",
+    "# ------------------------- Daten laden -------------------------\n",
+    "df_clean = pd.read_csv(clean_csv_path, low_memory=False)\n",
+    "df_raw = pd.read_csv(raw_csv_path, low_memory=False)\n",
+    "\n",
+    "print(f\"Clean Data Shape: {df_clean.shape}\")\n",
+    "print(f\"Raw Data Shape:   {df_raw.shape}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "17d32322",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "    <b>2. Preprocessing & VAE Model Definition</b>\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "f328a947",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:07:10.574142Z",
+     "iopub.status.busy": "2026-01-05T22:07:10.574142Z",
+     "iopub.status.idle": "2026-01-05T22:07:10.697251Z",
+     "shell.execute_reply": "2026-01-05T22:07:10.697251Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Features f\u00fcr VAE (19): ['redox_potential_in_mV', 'total_dissolved_solids_in_mmol/L', 'O2_in_mmol/L', 'Na_in_mmol/L', 'Mg_in_mmol/L', 'Ca_in_mmol/L', 'Cl_in_mmol/L', 'SO4_in_mmol/L', 'HCO3_in_mmol/L', 'Li_in_mmol/L', 'K_in_mmol/L', 'Sr_in_umol/L', 'NH4_in_umol/L', 'Fe_in_mmol/L', 'Mn_in_mmol/L', 'F_in_umol/L', 'NO3_in_mmol/L', 'H2SiO3_in_umol/L', 'HS_in_mmol/L']\n",
+      "Preprocessing fitted on Clean Data.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Konfiguration -------------------------\n",
+    "# ------------------------- Ausschluss von Metadaten -------------------------\n",
+    "METADATA_COLS = [\n",
+    "    'WGS84_latitude', 'WGS84_longitude', 'Database_number', 'database_name', 'Database_name', \n",
+    "    'Date', 'Day', 'Month', 'Year', 'id', 'index', 'rock_type', 'temperature_in_c'\n",
+    "]\n",
+    "# Temperatur nehmen wir f\u00fcrs Training raus, oder mit rein? \n",
+    "# -> Mit rein, da Korrelation zu Ionen besteht! Aber wir m\u00fcssen sie separat behandeln beim \"Reinschieben\".\n",
+    "# Update: Wir nutzen Temperatur als Feature, da sie wichtig f\u00fcr L\u00f6slichkeit ist.\n",
+    "METADATA_COLS_TRAIN = [c for c in METADATA_COLS if c != 'temperature_in_c']\n",
+    "\n",
+    "# ------------------------- Numerische Spalten identifizieren -------------------------\n",
+    "numeric_cols = df_clean.select_dtypes(include=[np.number]).columns.tolist()\n",
+    "train_features = [c for c in numeric_cols if c not in METADATA_COLS_TRAIN]\n",
+    "\n",
+    "print(f\"Features f\u00fcr VAE ({len(train_features)}): {train_features}\")\n",
+    "\n",
+    "# ------------------------- Pipeline definieren -------------------------\n",
+    "# ------------------------- 1. Simple Imputer (Mean) -------------------------\n",
+    "imputer = SimpleImputer(strategy='mean')\n",
+    "# ------------------------- 2. Scaler (StandardScaler) -------------------------\n",
+    "scaler = StandardScaler()\n",
+    "\n",
+    "# ------------------------- Fit auf bereinigten Daten -------------------------\n",
+    "X_clean = df_clean[train_features].values\n",
+    "\n",
+    "# ------------------------- Preprocessing anwenden -------------------------\n",
+    "X_clean_imputed = imputer.fit_transform(X_clean)\n",
+    "X_clean_scaled = scaler.fit_transform(X_clean_imputed)\n",
+    "\n",
+    "# ------------------------- Tensor-Konvertierung -------------------------\n",
+    "tensor_clean = torch.FloatTensor(X_clean_scaled)\n",
+    "dataloader = DataLoader(TensorDataset(tensor_clean), batch_size=64, shuffle=True)\n",
+    "\n",
+    "print(\"Preprocessing fitted on Clean Data.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "3325b557",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:07:10.700930Z",
+     "iopub.status.busy": "2026-01-05T22:07:10.700380Z",
+     "iopub.status.idle": "2026-01-05T22:07:13.485578Z",
+     "shell.execute_reply": "2026-01-05T22:07:13.485578Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Model initialized.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- VAE Klasse -------------------------\n",
+    "class VAE(nn.Module):\n",
+    "    def __init__(self, input_dim, hidden_dim=64, latent_dim=12):\n",
+    "        super(VAE, self).__init__()\n",
+    "        # ------------------------- Encoder -------------------------\n",
+    "        self.fc1 = nn.Linear(input_dim, hidden_dim)\n",
+    "        self.fc2_mu = nn.Linear(hidden_dim, latent_dim)\n",
+    "        self.fc2_logvar = nn.Linear(hidden_dim, latent_dim)\n",
+    "        # ------------------------- Decoder -------------------------\n",
+    "        self.fc3 = nn.Linear(latent_dim, hidden_dim)\n",
+    "        self.fc4 = nn.Linear(hidden_dim, input_dim)\n",
+    "        self.activation = nn.ReLU()\n",
+    "\n",
+    "    def encode(self, x):\n",
+    "        h1 = self.activation(self.fc1(x))\n",
+    "        return self.fc2_mu(h1), self.fc2_logvar(h1)\n",
+    "\n",
+    "    def reparameterize(self, mu, logvar):\n",
+    "        std = torch.exp(0.5 * logvar)\n",
+    "        eps = torch.randn_like(std)\n",
+    "        return mu + eps * std\n",
+    "\n",
+    "    def decode(self, z):\n",
+    "        h3 = self.activation(self.fc3(z))\n",
+    "        return self.fc4(h3)\n",
+    "\n",
+    "    def forward(self, x):\n",
+    "        mu, logvar = self.encode(x)\n",
+    "        z = self.reparameterize(mu, logvar)\n",
+    "        return self.decode(z), mu, logvar\n",
+    "\n",
+    "# ------------------------- Modellinitialisierung -------------------------\n",
+    "input_dim = X_clean_scaled.shape[1]\n",
+    "model = VAE(input_dim=input_dim, hidden_dim=128, latent_dim=16) # Etwas gr\u00f6\u00dfere Architektur\n",
+    "optimizer = optim.Adam(model.parameters(), lr=1e-3)\n",
+    "\n",
+    "print(\"Model initialized.\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "05edb3e3",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "    <b>3. Training auf Clean Data</b>\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "62befc62",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:07:13.489220Z",
+     "iopub.status.busy": "2026-01-05T22:07:13.489220Z",
+     "iopub.status.idle": "2026-01-05T22:11:08.230718Z",
+     "shell.execute_reply": "2026-01-05T22:11:08.230718Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Starting Training...\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 0: Loss 44.2707\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 10: Loss 2603611491.0509\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 20: Loss 411552.7584\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 30: Loss 3459.9732\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 40: Loss 11.2564\n"
+     ]
+    },
+    {
+     "data": {
+      "image/png": "iVBORw0KGgoAAAANSUhEUgAAA+AAAAImCAYAAADT4eBgAAAAOXRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjkuMSwgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy/TGe4hAAAACXBIWXMAAA9hAAAPYQGoP6dpAABM8UlEQVR4nO3deZjVZd0/8M+ZHVTcFXMJBUUsFBANMtTscfkVLS4tZqiP+0q5pj/XXMISscRM+Zn2uD1Wgj4umaUtZJeaYD1qagiKuaSIJCjMPuf3B3wPM7HNnDnLnHNer+vicuZ7zvmee2bua+TNfX8+dyqdTqcDAAAAyKuqYg8AAAAAKoEADgAAAAUggAMAAEABCOAAAABQAAI4AAAAFIAADgAAAAUggAMAAEABCOAAAABQAAI4AAAAFIAADkBFOO+882Lo0KFr/TNhwoRevcfUqVNj6NCheX9Ntgr5Xr1x+eWXx7XXXhv3339/DB06NB5++OE1PveWW26JnXfeOf7xj39krv385z+PoUOHxkknnbTa1zz11FPrnAszZ86MiIgnnngivvjFL0Zra2tuv0gAKlJNsQcAAIVwyimnxNe+9rXM5zfccEO88MILcf3112eurb/++r16jy9/+csxbty4vL+mnD3xxBPxm9/8Jh555JFIpVJx2WWXxQMPPBD/5//8n9U+/957740999wztttuu8y16dOnx0477RQzZ86Mf/7zn7HVVlut9rUXX3xxfOxjH1vtY4MHD46IiLFjx8bWW28dN9xwQ3zzm9/s5VcHQKUTwAGoCNttt12XkLbJJptEXV1djBgxImfvMXDgwBg4cGDeX1POJk2aFEcffXT069cvIiLGjx8f99xzTyxevDg23HDDLs994YUXYs6cOXH11Vdnrs2bNy/++te/xs033xxnnHFG/OxnP4tvfetbq32vIUOGdOvnf/LJJ8fXv/71OPzww2OLLbbI+msDAFvQAaCTGTNmxC677BK/+MUvYq+99oo999wz5s6dG+3t7TFt2rQYP3587LrrrjFixIj42te+Fk8++WTmtf++xXvChAlxwQUXxLRp02LfffeN4cOHx9e+9rV49tlne/WaiIjf//73ccghh8Suu+4aBx54YDz44IOx//77x9SpU3v9PZg/f35MnDgx9tprrxgxYkRMmDAhZs+e3eU5Dz74YHzhC1+IXXfdNcaMGRNnn312vPPOO5nHn3/++TjqqKNi9913j5EjR8bRRx8df/3rX9f6vr///e9jzpw58bnPfS5z7dBDD43W1tb41a9+tcrz77333hgwYEAceOCBmWvTp0+PDTfcMMaMGRMHHnhg3HPPPdHW1pbld2K54cOHx0c+8pG49dZbe3UfABDAAeDftLe3xy233BJXXnllnH/++TF48OCYPHly3HDDDfHVr341br755rj88svj/fffj29+85vR2Ni4xns98sgj8dhjj8WFF14YU6ZMiYULF8bpp58e7e3tWb/mySefjFNOOSW22mqrmDp1ahxxxBFxySWXxD//+c9ef+1z586NQw45JN5444248MILY/LkyZFKpeKoo46KP//5zxERMXv27Dj33HPjgAMOiP/3//5fnH/++fHkk0/GWWedFRERH374YRx33HGx8cYbx9SpU+Paa6+NxsbGOPbYY+ODDz5Y43vff//9MWLEiNhyyy0z14YPHx5Dhw6NBx54oMtz29ra4qGHHorPf/7zUV9fn7l2//33x/jx46O2tjYOPvjgePfdd+O3v/3tat+vo6Mj2traVvmzup/NQQcdFA8++GDPvpkA8G8qYgv6TTfdFI8//njcfvvt3X7N+++/H1OmTInf//738eGHH8bQoUPjrLPOitGjR6/y3Ndeey2++MUvxoMPPhjbbLNNLocOQJGcdNJJse+++2Y+X7BgQZxxxhldGrXV19fH6aefHn//+9/XuJW5ra0tfvKTn2Tqy5cuXRrf/va348UXX4yPf/zjWb1m6tSpseOOO8b1118fqVQqIiI23XTTOPPMM3v9dV9//fVRV1cXt912W+b999133xg/fnx8//vfj3vuuSdmz54dDQ0NccIJJ0RdXV1ERGy00Ubx3HPPRTqdjrlz58a//vWvOPLII2PUqFEREbHDDjvEz372s1i6dGlssMEGq33vJ598ssvqd+LQQw+NSZMmxVtvvRUf+chHIiJi5syZ8d5778Vhhx2Wed7MmTPj3XffjUMOOSQiIkaPHh2DBg2Ku+++Ow444IBV7nv00Uevdhw77rjjKmF7+PDhceONN8a8efMy9eEA0FNlH8DvvPPO+MEPfrDa4Lw2Z555Zrz77rsxZcqU2HTTTeP222+PY489Nu69997YYYcdMs+bN29enHDCCWtd/QCg9AwbNqzL59dcc01ERCxatCheeeWVeO211+J3v/tdRES0tLSs8T5Dhgzp0twtWd1d2/831vaalpaW+Mtf/hKnnnpqJnxHLF+hPffcc7v75a3Rn//85/j0pz/d5f1ramric5/7XPzoRz+KpUuXxh577BHXXnttjB8/Pg488MDYZ5994lOf+lTss88+EbE8wG6yySZx0kknxUEHHRTjxo2LvfbaK84555w1vu+yZcvivffeW+0/ZH/hC1+Iq6++Oh588ME44YQTIiLivvvui1122SV22WWXzPOmT58e22+/fWy33XaxZMmSzPflpptuin/84x9degBERHznO99ZbRO2hoaGVa4l43rjjTcEcACyVrZb0N9555046aSTYvLkyTFo0KAevfa1116LP/3pT3HppZfG6NGjY/vtt4+LLrootthiiy5b4G666aY47LDDVmkKA0Dp69+/f5fPn3vuuTjssMNi7Nixcdxxx8V///d/R1XV8v+NptPpNd4naSaWSF7T0dGR1Wvef//9aG9vj0033bTLc6qrq2OjjTZa+xfVDYsXL47NNttsleubbbZZpNPp+PDDD2PkyJExbdq02HbbbePWW2+NI444Ivbee+/MTrP11lsv7rzzzthnn33i4YcfjtNOOy3Gjh0bF1988Rr/sSLZmv7v3/eIiI033jj222+/zP+DFy9eHL/73e+6rH6/99578Yc//CFeffXV2GOPPTJ/brzxxkin0/Gzn/1slftuv/32MXz48FX+7Ljjjqs8N/mZrG0LPQCsS9mugP/tb3+L2trauP/+++NHP/pRvPnmm10e/93vfhdTp06NuXPnxpZbbhmf+9zn4pRTTom6urrYeOONY9q0aTF8+PDM81OpVKRSqcy/qEdEPProozFp0qTYeOON48gjjyzY1wZAYSU1zUOHDo2HHnoodthhh6iqqoo//OEP8cgjjxR0LJtuumnU1tbGwoULu1xPwnlvbbjhhqvcOyLi3XffjYjlYTgiYty4cTFu3LhobGyMJ598Mm677ba44oorYrfddotdd901dthhh7j66qujvb09nn322fif//mf+O///u/Ybrvt4rjjjlvl/sl9O/9/trPDDjssjj/++JgzZ07Mnj07UqlUfP7zn888fv/990dbW1v86Ec/WmWL+9SpU2PGjBnxzW9+M7NlvqcWL17cZZwAkI2yXQHfb7/9YurUqbHtttuu8tjMmTPjW9/6VnzlK1+JBx98MC655JJ4+OGHM1vjBgwYEPvss0+X/0k/8sgj8dprr3U5q/UXv/hFHHTQQfn/YgAoqldeeSXef//9OPLII2PIkCGZFemZM2dGxNpXs3Oturo6Ro0aFY899liX67/97W973e07ImKPPfaI3/3ud/Hhhx9mrrW3t8dDDz0Uw4cPj7q6uvje974Xhx56aKTT6ejXr198+tOfjm9/+9sREfHWW2/Fr371qxgzZky8++67UV1dHSNHjoxLL700BgwYEG+99dZq37euri4233zzNTaS+9SnPhUDBw6MX//61/Hwww/HAQccEAMGDMg8PmPGjBgxYkT8x3/8R3ziE5/o8ucrX/lKLFq0KH7zm99k/X1JOrwnNegAkI2yXQFfmxtvvDG+8pWvxNe+9rWIWH427He+85046qij4o033lil/uyZZ56J888/Pw444IAuDXkAqAzbb799rL/++nHjjTdGTU1N1NTUxCOPPBL33HNPRKy9njsfJk6cGBMmTIiJEyfGYYcdFm+99Vb88Ic/jIjoUhe+Jj/96U9XuTZgwIA45JBD4rTTTouZM2fGkUceGSeccELU1tbGHXfcEa+//nrcfPPNERExZsyYuPXWW+O8886LL3zhC9Ha2ho333xzbLTRRjFmzJhoaWmJjo6OOPXUU+OEE06I9dZbLx5++OH44IMPVtsMLbHXXnvFM888s9rHqqqq4ktf+lLcd9998dZbb3U5EuzZZ5+NOXPmxEUXXbTa1+6///6x3nrrxd13392lydvcuXMzHdT/3eabbx5bb7115vPZs2fHNttsE9tvv/0axw8A61KRAfyFF16IZ599NvMXp4iV9Xvz5s3rEsAfffTROPvss2PUqFExefLkgo8VgOLbYIMN4oYbbojvf//78c1vfjPWW2+9GDZsWNxxxx1x/PHHx6xZs2K//fYr2HhGjx4dU6dOjR/+8IdxyimnxNZbbx0XXXRRnHHGGbHeeuut8/WTJk1a5dp2220XhxxySOy4445x1113xZQpU+L888+PVCoVu+66a9x2222Zhqb77LNPTJ48OW655ZY47bTTIpVKxe677x633XZbpg795ptvjh/+8IdxwQUXRGNjY+y4444xderUGDNmzBrHdeCBB8YDDzwQ77zzTpejyBKHHXZY3HTTTbHtttvGnnvumbk+ffr0qK6uXuOutH79+sWBBx4YM2bMiHnz5mWuX3bZZWscy5FHHhkXXHBB5vM//vGPdr0B0Gup9No6x5SJ8847L958881Mc5hdd901jjnmmDj44INXee7mm2+eaQBzxx13xJVXXhkHHXRQfO9731tj3dhTTz0VRx55ZDz22GOOIQMg7x577LEYOHBglw7eL7/8cowfPz5uuOGG+MxnPlPE0WUvnU7HF77whTjwwAPjtNNOK/ZwMmbNmhXHHHNMPProo7HFFlsUezgAlLCyrQFfmx133DFeffXV+OhHP5r58/bbb8f3v//9WLp0aURE3HXXXXH55ZfHEUccEVOmTMm6aQsA5Nrjjz8exxxzTPziF7+IWbNmxUMPPRRnnHFG7LDDDvGpT32q2MPLWiqVinPOOSfuvvvuLjXoxXbzzTfHUUcdJXwD0GsVuQX9+OOPj29961tx/fXXx+c+97l4++2344ILLohtttkmNt9883j11Vfju9/9buy///5x4okndukG29DQsEp3VQAopG9/+9vR0NAQP/7xj2PBggWx0UYbxbhx4+Kss85aY01zqdh7773jM5/5TNx0001x1llnFXs48cQTT8Rbb70V1113XbGHAkAZqMgt6BERDz/8cNx0000xd+7c2GijjWK//faLs88+OwYMGBA33nhjXHvttau918EHHxxXXXVVl2u2oAMAALAuFRHAAQAAoNgqsgYcAAAACk0ABwAAgAIoqyZsf/nLXyKdTkdtbW2xhwIAAEAFaG1tjVQqFSNHjlznc8tqBTydTkeplLSn0+loaWkpmfFS2cxXSo05SykxXyk15iylpBDztSc5tKxWwJOV7+HDhxd5JOu2bNmyePHFF2PIkCHRv3//Yg8H1sp8pdSYs5QS85VSY85SSgoxX5977rluP7esVsABAACgrxLAAQAAoAAEcAAAACgAARwAAAAKQAAHAACAAhDAAQAAoAAEcAAAACgAARwAAAAKQAAHAACAAhDAAQAAoAAEcAAAACgAARwAAAAKQAAHAACAAhDAAQAAoAAEcAAAACgAARwAAAAKQAAHAACAAhDAAQAAoAAE8Ap31yMvxU/uf77YwwAAACh7AngFa23riP/+9d/jvj/MiyVLW4o9HAAAgLImgFew5tb2zMdNzW1FHAkAAED5E8ArWHPLytDd1CKAAwAA5JMAXsGaW1augHdeDQcA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9ElTp06N9ddfv8s1fyegL5ozZ04MGjQotthii1Ue+6//+q8+M2etgBfQSy+9FEuXLu3yF78BAwbELrvsEk8//XQRRwbL/e1vf4va2tq4//77Y7fdduvy2KxZs2LPPfeMmpqV/243ZsyYmD9/fixcuLDQQ4XYeOONY9q0aTF8+PDMtVQqFalUKpYsWRKzZs1aJWiPGTMmZs+eHel0utDDpcJtuOGGcc0112TC96JFi+KnP/1pDBw4MIYMGeJ3LH3S008/HT/72c/iqquu6nLdfKUv+vvf/x6DBw9e7WN9ac4K4AX09ttvR0TEVltt1eX6FltskXkMimm//faLqVOnxrbbbrvKY2+//XYMHDiwy7XkXxj/+c9/FmR80NmAAQNin332ibq6usy1Rx55JF577bUYN27cGudsst0XiuWiiy6KsWPHxkMPPRRXXnll9O/f3+9Y+pwlS5bEueeeGxdeeOEqf3c1X+mL5syZE4sWLYojjjgiPvnJT8bhhx8eM2fOjIi+NWcF8AJqbGyMiOjyl8WIiPr6+mhubi7GkKDbmpqaVjt3I8L8pU945pln4vzzz48DDjgg9t1339XO2eRzfTcopqOOOiqmT58e48ePj1NPPTX+9re/+R1Ln3PppZfGyJEj4/Of//wqj5mv9DVtbW3xyiuvxOLFi+P000+PadOmxYgRI+KEE06IJ554ok/NWTXgBdTQ0BARy//il3wcsfyH3q9fv2INC7qloaFhldCS/MLq379/MYYEGY8++micffbZMWrUqJg8eXJELP8f67/P2eRzv3MppiFDhkRExJVXXhn/+7//G3fccYffsfQp9913X8yaNSseeOCB1T5uvtLX1NTUxFNPPRXV1dWZnPXxj388Xn755fjJT37Sp+asFfACSrbvLFiwoMv1BQsWxJZbblmMIUG3DRw4cLVzNyLMX4rqjjvuiNNPPz0+/elPx4033pj5F+2tttpqtXO2f//+scEGGxRjqFSwRYsWxUMPPRRtbW2Za1VVVTFkyJBYsGCB37H0KdOnT4/33nsv9t133xg5cmSMHDkyIiIuueSSOO6448xX+qT11luvyyJnRMSOO+4Y77zzTp+aswJ4Ae28886x/vrrx1NPPZW5tmTJknjhhRdijz32KOLIYN322GOPmD17drS3t2euPfnkk7H99tvHpptuWsSRUcmSYx2POOKImDJlSpftZaNHj44///nPXZ7/5JNPxqhRo6Kqyv/+KKyFCxfGmWee2eUYvNbW1njhhRdi8ODBfsfSp0yePDl++ctfxn333Zf5ExExceLEuPLKK81X+pyXX345Ro0a1SVnRUQ8//zzMWTIkD41Z/0NpIDq6uriG9/4RkyePDkee+yxeOmll+KMM86IgQMHxgEHHFDs4cFaHXroofHhhx/GBRdcEHPnzo0ZM2bET3/60zjxxBOLPTQq1Kuvvhrf/e53Y//9948TTzwxFi5cGO+++268++678cEHH8SECRPi2WefjcmTJ8e8efPilltuiV/96ldx3HHHFXvoVKCddtop9t5777jiiivi6aefjjlz5sR5550XS5YsiaOPPtrvWPqULbfcMj760Y92+RMRsemmm8aWW25pvtLnDB48OHbYYYe47LLLYtasWTFv3ryYNGlS/PWvf42TTz65T83ZVNpZLAXV3t4eU6ZMiRkzZkRTU1PssccecfHFF8c222xT7KFBF+edd168+eabcfvtt2euPfvss3HllVfGCy+8EJtvvnkcc8wx8Y1vfKOIo6SS3XjjjXHttdeu9rGDDz44rrrqqpg5c2ZcffXVMX/+/Nhmm23i9NNPj89+9rMFHiks98EHH8Q111wTjz76aHzwwQcxevToOO+882LHHXeMCL9j6duGDh0akyZNikMOOSQizFf6noULF8Y111wTf/zjH2PJkiWxyy67xNlnnx2jR4+OiL4zZwVwAAAAKABb0AEAAKAABHAAAAAoAAEcAAAACkAABwAAgAIQwAEAAKAABHAAAAAoAAEcAAAACqCm2AMAAHrmvPPOi3vvvXeNj2+22Wbxpz/9qYAjihg6dGicdtppcfrppxf0fQGglAjgAFCCNt9887j++utX+1htbW2BRwMAdIcADgAlqK6uLkaMGFHsYQAAPSCAA0CZmjBhQmy99dYxaNCguO2226K5uTk+8YlPxAUXXBBbb7115nnPPfdc/OAHP4jnn38+WltbY88994yzzjordtxxx8xzFixYENdcc03MnDkzmpqa4mMf+1icddZZMXLkyMxzPvzww7jgggviN7/5TbS2tsa4cePi4osvjs0226ygXzcA9FWasAFAiWpra1vtn3Q6nXnOY489FjNmzIgLL7wwvvOd78SLL74YEyZMiMbGxoiIePLJJ+Pwww+PiIjvfve7ccUVV8Q///nP+NrXvhbz5s2LiIilS5fG4YcfHk899VScc845cf3110d9fX0cc8wxMX/+/Mx73XbbbdHa2ho//OEP46yzzorf/va3cdlllxXuGwIAfZwVcAAoQW+++WZ87GMfW+1j5557bhx77LEREdHY2BgzZsyIbbfdNiIidthhhzj44IPjvvvui8MPPzyuueaa+OhHPxrTpk2L6urqiIj41Kc+Ffvvv39cd9118cMf/jDuvffeePPNN+Pee++NYcOGRUTEqFGj4ktf+lI8/fTTMWjQoIiIGD58eHz/+9+PiIixY8fG//7v/8Yf/vCHfH4bAKCkCOAAUII233zz+PGPf7zax7baaqvMx6NGjcqE74iIXXbZJbbddtt4+umn44tf/GI899xzcdppp2XCd0TEgAED4tOf/nQmPM+ePTu22WabTPiOiOjXr1888sgjXd5399137/L5NttsE0uWLMn+iwSAMiOAA0AJqquri+HDh6/zeVtuueUq1zbddNNYvHhxfPDBB5FOp1dbo73ZZpvFBx98EBER77//fmy66abrfK/+/ft3+byqqqrLdngAqHRqwAGgjP3rX/9a5drChQtjk002iQ022CBSqVQsXLhwlee8++67sdFGG0VExAYbbBCLFi1a5TnPPPNMpk4cAFg3ARwAytjs2bO7hPDnn38+3njjjRg7dmz0798/Pv7xj8fDDz8c7e3tmed88MEH8fvf/z6zpXz06NHx+uuvx8svv5x5TnNzc5x++ulxzz33FO6LAYASZws6AJSglpaW+Otf/7rGx4cOHRoRy5uwHXfccXHyySfH0qVL49prr42ddtopxo8fHxERZ511Vhx77LFxwgknxNe//vVobW2NadOmRUtLS5x66qkREXHIIYfE7bffHieffHJMnDgxNt5440zH869//et5/1oBoFwI4ABQgt5999346le/usbH77vvvohYvno9ZsyYuOCCCyIiYr/99otzzz036urqImJ5t/Jbb701rrvuujjzzDOjrq4uRo8eHd/73vcy54Cvv/76cccdd8T3v//9uPzyy6OjoyNGjBgRt912W5cGbwDA2qXSuqMAQFmaMGFCRETcfvvtRR4JABChBhwAAAAKQgAHAACAArAFHQAAAArACjgAAAAUgAAOAAAABSCAAwAAQAEI4AAAAFAAAjgAAAAUgAAOAAAABSCAAwAAQAEI4AAAAFAAAjgAAAAUwP8HwTVAPFCS3K4AAAAASUVORK5CYII=",
+      "text/plain": [
+       "<Figure size 1200x600 with 1 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "def loss_function(recon_x, x, mu, logvar):\n",
+    "    MSE = nn.MSELoss(reduction='sum')(recon_x, x)\n",
+    "    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())\n",
+    "    return MSE + KLD\n",
+    "\n",
+    "epochs = 50\n",
+    "model.train()\n",
+    "print(\"Starting Training...\")\n",
+    "history = []\n",
+    "\n",
+    "for epoch in range(epochs):\n",
+    "    train_loss = 0\n",
+    "    for batch in dataloader:\n",
+    "        data = batch[0]\n",
+    "        optimizer.zero_grad()\n",
+    "        recon, mu, logvar = model(data)\n",
+    "        loss = loss_function(recon, data, mu, logvar)\n",
+    "        loss.backward()\n",
+    "        train_loss += loss.item()\n",
+    "        optimizer.step()\n",
+    "    \n",
+    "    avg_loss = train_loss / len(dataloader.dataset)\n",
+    "    history.append(avg_loss)\n",
+    "    if epoch % 10 == 0:\n",
+    "        print(f\"Epoch {epoch}: Loss {avg_loss:.4f}\")\n",
+    "\n",
+    "plt.plot(history)\n",
+    "plt.title(\"Training Loss (VAE)\")\n",
+    "plt.xlabel(\"Epoch\")\n",
+    "plt.ylabel(\"Loss\")\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3bec2ec1",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "    <b>4. Imputation auf Raw Data (Data Rescue)</b><br>\n",
+    "    Hier passiert die Magie: Wir nehmen die \"kaputten\" Rohdaten und schicken sie durch das trainierte Modell.\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "cb28d680",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:08.234251Z",
+     "iopub.status.busy": "2026-01-05T22:11:08.233244Z",
+     "iopub.status.idle": "2026-01-05T22:11:08.719931Z",
+     "shell.execute_reply": "2026-01-05T22:11:08.719931Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Imputation abgeschlossen.\n",
+      "NaNs vor Imputation in Raw: 2191893\n",
+      "NaNs nach Imputation in Raw: 0\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Features aus Rohdaten extrahieren -------------------------\n",
+    "# Achtung: Manchmal fehlen Spalten in Raw, die in Clean waren (unwahrscheinlich, aber m\u00f6glich)\n",
+    "# oder umgekehrt. Wir nutzen exakt dieselben Feature-Namen.\n",
+    "missing_cols_in_raw = [c for c in train_features if c not in df_raw.columns]\n",
+    "if missing_cols_in_raw:\n",
+    "    print(f\"Warning: {len(missing_cols_in_raw)} features missing in Raw Data. Filling with NaN.\")\n",
+    "    for c in missing_cols_in_raw:\n",
+    "        df_raw[c] = np.nan\n",
+    "\n",
+    "X_raw = df_raw[train_features].values\n",
+    "\n",
+    "# ------------------------- Preprocessing f\u00fcr VAE (Clean-Scaler) -------------------------\n",
+    "X_raw_imputed_temp = imputer.transform(X_raw) # Mean-Impute f\u00fcr Netz-Input\n",
+    "X_raw_scaled = scaler.transform(X_raw_imputed_temp)\n",
+    "\n",
+    "# ------------------------- Rekonstruktion -------------------------\n",
+    "model.eval()\n",
+    "with torch.no_grad():\n",
+    "    raw_tensor = torch.FloatTensor(X_raw_scaled)\n",
+    "    # Durchschieben\n",
+    "    recon_scaled, _, _ = model(raw_tensor)\n",
+    "    recon_scaled_np = recon_scaled.numpy()\n",
+    "    \n",
+    "    # Zur\u00fccktransformieren\n",
+    "    recon_original_scale = scaler.inverse_transform(recon_scaled_np)\n",
+    "\n",
+    "# ------------------------- L\u00fccken f\u00fcllen (Imputation) -------------------------\n",
+    "# Wir nehmen df_raw (Original) und f\u00fcllen NUR dort, wo NaNs waren mit den Werten aus der Rekonstruktion.\n",
+    "# Werte, die da waren, bleiben erhalten (Ground Truth).\n",
+    "df_imputed = df_raw.copy()\n",
+    "\n",
+    "# Pandas hat .fillna, aber wir wollen gezielt aus einem anderen Array f\u00fcllen.\n",
+    "# Am saubersten: DataFrame aus Recon erstellen und combine_first oder where nutzen.\n",
+    "df_recon = pd.DataFrame(recon_original_scale, columns=train_features, index=df_raw.index)\n",
+    "\n",
+    "for col in train_features:\n",
+    "    # F\u00fclle NaNs in df_imputed[col] mit Werten aus df_recon[col]\n",
+    "    df_imputed[col] = df_imputed[col].fillna(df_recon[col])\n",
+    "\n",
+    "print(\"Imputation abgeschlossen.\")\n",
+    "print(f\"NaNs vor Imputation in Raw: {df_raw[train_features].isna().sum().sum()}\")\n",
+    "print(f\"NaNs nach Imputation in Raw: {df_imputed[train_features].isna().sum().sum()}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d932b5f7",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "    <b>5. Post-Processing Constraints</b>\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "cc2972ef",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:08.724996Z",
+     "iopub.status.busy": "2026-01-05T22:11:08.723994Z",
+     "iopub.status.idle": "2026-01-05T22:11:08.804983Z",
+     "shell.execute_reply": "2026-01-05T22:11:08.804983Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Constraint Temp >= 10 angewendet. Min vorher: -12.1, Min nachher: 10.0\n",
+      "IBE Report:\n",
+      "Total Rows: 175099\n",
+      "Valid IBE calculated: 173915\n",
+      "Good IBE (<= 5%): 106528 (60.8%)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Constraint 1: Temperatur >= 10.0 -------------------------\n",
+    "TEMP_COL = 'temperature_in_c'\n",
+    "if TEMP_COL in df_imputed.columns:\n",
+    "    # Erzwinge numerisch\n",
+    "    df_imputed[TEMP_COL] = pd.to_numeric(df_imputed[TEMP_COL], errors='coerce')\n",
+    "    \n",
+    "    # Clip auf Minimum 10.0\n",
+    "    # Wir bef\u00fcllen auch NaNs, die evtl. durchs Raster fielen (sollten keine sein) mit 10.0\n",
+    "    df_imputed[TEMP_COL] = df_imputed[TEMP_COL].fillna(10.0)\n",
+    "    \n",
+    "    pre_clip_min = df_imputed[TEMP_COL].min()\n",
+    "    df_imputed[TEMP_COL] = df_imputed[TEMP_COL].clip(lower=10.0)\n",
+    "    post_clip_min = df_imputed[TEMP_COL].min()\n",
+    "    \n",
+    "    print(f\"Constraint Temp >= 10 angewendet. Min vorher: {pre_clip_min}, Min nachher: {post_clip_min}\")\n",
+    "else:\n",
+    "    print(\"Warning: Temperature column not found.\")\n",
+    "\n",
+    "\n",
+    "# ------------------------- Constraint 2: IBE Check -------------------------\n",
+    "# Wir importieren die IBE Logik aus dem Kontext (oder kopieren sie kurz rein, da Abh\u00e4ngigkeiten schwierig sein k\u00f6nnen)\n",
+    "ION_SPECS = {\n",
+    "    'Na':   {'valence': 1, 'mass': 22.99, 'type': 'cation', 'regex': r'Na_in_([a-zA-Z0-9/]+)'},\n",
+    "    'Ca':   {'valence': 2, 'mass': 40.08, 'type': 'cation', 'regex': r'Ca_in_([a-zA-Z0-9/]+)'},\n",
+    "    'Mg':   {'valence': 2, 'mass': 24.31, 'type': 'cation', 'regex': r'Mg_in_([a-zA-Z0-9/]+)'},\n",
+    "    'Cl':   {'valence': 1, 'mass': 35.45, 'type': 'anion',  'regex': r'Cl_in_([a-zA-Z0-9/]+)'},\n",
+    "    'HCO3': {'valence': 1, 'mass': 61.02, 'type': 'anion',  'regex': r'HCO3_in_([a-zA-Z0-9/]+)'},\n",
+    "    'SO4':  {'valence': 2, 'mass': 96.06, 'type': 'anion',  'regex': r'SO4_in_([a-zA-Z0-9/]+)'},\n",
+    "}\n",
+    "\n",
+    "def calculate_ibe_local(df):\n",
+    "    cation_sum_meq = 0.0\n",
+    "    anion_sum_meq = 0.0\n",
+    "    \n",
+    "    for ion, specs in ION_SPECS.items():\n",
+    "        matches = [c for c in df.columns if re.search(specs['regex'], c)]\n",
+    "        if not matches: continue\n",
+    "        col_name = matches[0]\n",
+    "        \n",
+    "        vals = pd.to_numeric(df[col_name], errors='coerce').fillna(0.0)\n",
+    "        \n",
+    "        # Einheitenvereinfachung (wir nehmen an, es ist fast immer mg/L oder mmol/L wie im Original)\n",
+    "        # Da wir 'Raw' imputieren, sind die Einheiten Strings im Spaltennamen.\n",
+    "        unit_match = re.search(specs['regex'], col_name)\n",
+    "        unit = unit_match.group(1).lower() if unit_match else \"unknown\"\n",
+    "        \n",
+    "        if unit in ['mg/l', 'mg_l']:\n",
+    "            vals_mmol = vals / specs['mass']\n",
+    "        elif unit in ['mmol/l', 'mmol_l', 'mm']:\n",
+    "            vals_mmol = vals\n",
+    "        elif unit in ['umol/l', 'umol_l']:\n",
+    "            vals_mmol = vals / 1000.0\n",
+    "        else:\n",
+    "            vals_mmol = vals \n",
+    "            \n",
+    "        meq_vals = vals_mmol * specs['valence']\n",
+    "        if specs['type'] == 'cation':\n",
+    "            cation_sum_meq += meq_vals\n",
+    "        else:\n",
+    "            anion_sum_meq += meq_vals\n",
+    "            \n",
+    "    diff = cation_sum_meq - anion_sum_meq\n",
+    "    total = cation_sum_meq + anion_sum_meq\n",
+    "    ibe = (diff / total) * 100.0\n",
+    "    # Fix Div/0\n",
+    "    ibe[total < 1e-9] = np.nan\n",
+    "    return ibe\n",
+    "\n",
+    "df_imputed['IBE_Calculated'] = calculate_ibe_local(df_imputed)\n",
+    "\n",
+    "# ------------------------- IBE-Pr\u00fcfbericht -------------------------\n",
+    "valid_ibe = df_imputed['IBE_Calculated'].dropna()\n",
+    "good_ibe = valid_ibe[valid_ibe.abs() <= 5.0]\n",
+    "print(f\"IBE Report:\\nTotal Rows: {len(df_imputed)}\\nValid IBE calculated: {len(valid_ibe)}\\nGood IBE (<= 5%): {len(good_ibe)} ({len(good_ibe)/len(df_imputed)*100:.1f}%)\")\n",
+    "\n",
+    "# ------------------------- Visualisierung Vorher/Nachher -------------------------\n",
+    "if 'IBE' in df_raw.columns:\n",
+    "    plt.figure(figsize=(10,5))\n",
+    "    sns.histplot(df_raw['IBE'], color='red', alpha=0.3, label='Original IBE', bins=50, binrange=(-20, 20))\n",
+    "    sns.histplot(df_imputed['IBE_Calculated'], color='blue', alpha=0.3, label='Imputed IBE', bins=50, binrange=(-20, 20))\n",
+    "    plt.legend()\n",
+    "    plt.title(\"IBE Distribution Before vs After Imputation (Zoomed +/- 20%)\")\n",
+    "    plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "ecdaa485",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:11:08.809257Z",
+     "iopub.status.busy": "2026-01-05T22:11:08.807262Z",
+     "iopub.status.idle": "2026-01-05T22:11:14.331106Z",
+     "shell.execute_reply": "2026-01-05T22:11:14.331106Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Datei gespeichert: C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\4_Imputation\\4.1_Imputation\\Imputed_Data_Raw.csv\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Speichern -------------------------\n",
+    "output_dir = base_dir\n",
+    "output_file = output_dir / \"Imputed_Data_Raw.csv\"\n",
+    "\n",
+    "df_imputed.to_csv(output_file, index=False)\n",
+    "print(f\"Datei gespeichert: {output_file}\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

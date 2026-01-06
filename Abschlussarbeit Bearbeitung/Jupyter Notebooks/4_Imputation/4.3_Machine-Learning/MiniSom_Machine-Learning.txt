@@ -1,0 +1,445 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "imports",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:13.872514Z",
+     "iopub.status.busy": "2026-01-05T22:12:13.872514Z",
+     "iopub.status.idle": "2026-01-05T22:12:16.440322Z",
+     "shell.execute_reply": "2026-01-05T22:12:16.439803Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import matplotlib.patches as mpatches\n",
+    "from matplotlib.collections import PatchCollection\n",
+    "from matplotlib.backends.backend_pdf import PdfPages\n",
+    "import seaborn as sns\n",
+    "import os\n",
+    "from pathlib import Path\n",
+    "from datetime import datetime\n",
+    "from sklearn.preprocessing import MinMaxScaler\n",
+    "from minisom import MiniSom"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "settings",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:16.443958Z",
+     "iopub.status.busy": "2026-01-05T22:12:16.442450Z",
+     "iopub.status.idle": "2026-01-05T22:12:16.447702Z",
+     "shell.execute_reply": "2026-01-05T22:12:16.447702Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "pd.set_option('display.max_columns', None)\n",
+    "sns.set_theme(style=\"whitegrid\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "load_data",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:16.451575Z",
+     "iopub.status.busy": "2026-01-05T22:12:16.450427Z",
+     "iopub.status.idle": "2026-01-05T22:12:17.464469Z",
+     "shell.execute_reply": "2026-01-05T22:12:17.463935Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Daten erfolgreich aus 4.2_Preprocessing geladen! Shape: (175099, 25)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Basisverzeichnis -------------------------\n",
+    "base_dir = Path.cwd()\n",
+    "\n",
+    "# ------------------------- Laden der vorverarbeiteten Daten (4.2) -------------------------\n",
+    "# ../4.2_Preprocessing/Preprocessed_SOM_Ready.csv\n",
+    "input_path_prep = base_dir.parent / \"4.2_Preprocessing\" / \"Preprocessed_SOM_Ready.csv\"\n",
+    "\n",
+    "if not input_path_prep.exists():\n",
+    "    raise FileNotFoundError(f\"Input-File nicht gefunden: {input_path_prep}\")\n",
+    "\n",
+    "df_full = pd.read_csv(input_path_prep, low_memory=False)\n",
+    "\n",
+    "print(f\"Daten erfolgreich aus 4.2_Preprocessing geladen! Shape: {df_full.shape}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "preprocessing_info",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "    <b>4.3 SOM Machine Learning (Imputed Data)</b><br><br>\n",
+    "    <b>Datenquelle:</b><br>\n",
+    "    - 4.2 Preprocessed Data (Imputiert + Log + Gauss)<br>\n",
+    "    <br>\n",
+    "    <b>Filter:</b><br>\n",
+    "    - <b>Nur Temperaturen > 10 \u00b0C</b> (dies sollte schon im Post-Processing von 4.1 erledigt sein, aber wir filtern sicherheitshalber nochmal oder verifizieren es).\n",
+    "    <br>\n",
+    "    <b>Ziel:</b><br>\n",
+    "    - Clustering mittels SOM (Hexagonal).\n",
+    "    - Analyse der Ergebnisse auf Basis der 'geretteten' Daten.\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "select_features",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:17.468093Z",
+     "iopub.status.busy": "2026-01-05T22:12:17.467095Z",
+     "iopub.status.idle": "2026-01-05T22:12:17.503703Z",
+     "shell.execute_reply": "2026-01-05T22:12:17.503175Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Input Features f\u00fcr SOM: ['Na_in_mmol/L_gauss', 'Mg_in_mmol/L_gauss', 'Ca_in_mmol/L_gauss', 'Cl_in_mmol/L_gauss', 'SO4_in_mmol/L_gauss', 'HCO3_in_mmol/L_gauss']\n",
+      "Filter Temp >= 10\u00b0C or NaN: 0 Zeilen entfernt. Verbleibend: 175099\n",
+      "Zeilen mit fehlenden Features entfernt: 0. Final: 175099\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Features ausw\u00e4hlen (nur Hauptionen) -------------------------\n",
+    "target_ions = [\"Na\", \"Ca\", \"Mg\", \"Cl\", \"HCO3\", \"SO4\"]\n",
+    "features = []\n",
+    "for col in df_full.columns:\n",
+    "    if \"_gauss\" in col:\n",
+    "        element = col.split(\"_\")[0]\n",
+    "        if element in target_ions:\n",
+    "            features.append(col)\n",
+    "\n",
+    "print(f\"Input Features f\u00fcr SOM: {features}\")\n",
+    "\n",
+    "# ------------------------- Filtern -------------------------\n",
+    "df_som = df_full[features + ['temperature_in_c', 'rock_type']].copy()\n",
+    "\n",
+    "# ------------------------- Temperatur in numerische Werte umwandeln -------------------------\n",
+    "df_som['temperature_in_c'] = pd.to_numeric(df_som['temperature_in_c'], errors='coerce')\n",
+    "\n",
+    "# ------------------------- Filter: Temp >= 10\u00b0C oder NaN -------------------------\n",
+    "len_before_temp = len(df_som)\n",
+    "# Logik: (Temp >= 10) ODER (Temp ist NaN)\n",
+    "temp_condition = (df_som['temperature_in_c'] >= 10) | (df_som['temperature_in_c'].isna())\n",
+    "df_som = df_som[temp_condition]\n",
+    "\n",
+    "print(f\"Filter Temp >= 10\u00b0C or NaN: {len_before_temp - len(df_som)} Zeilen entfernt. Verbleibend: {len(df_som)}\")\n",
+    "\n",
+    "initial_len = len(df_som)\n",
+    "df_som.dropna(subset=features, inplace=True)\n",
+    "print(f\"Zeilen mit fehlenden Features entfernt: {initial_len - len(df_som)}. Final: {len(df_som)}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "scaling",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:17.505754Z",
+     "iopub.status.busy": "2026-01-05T22:12:17.505754Z",
+     "iopub.status.idle": "2026-01-05T22:12:17.521184Z",
+     "shell.execute_reply": "2026-01-05T22:12:17.521184Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Daten skaliert.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- MinMax Scaling (SOM-Training) -------------------------\n",
+    "scaler = MinMaxScaler(feature_range=(0, 1))\n",
+    "data_values = df_som[features].values\n",
+    "data_scaled = scaler.fit_transform(data_values)\n",
+    "\n",
+    "print(\"Daten skaliert.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "train_som_hex",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:17.524238Z",
+     "iopub.status.busy": "2026-01-05T22:12:17.522731Z",
+     "iopub.status.idle": "2026-01-05T22:12:18.054205Z",
+     "shell.execute_reply": "2026-01-05T22:12:18.053687Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Starte SOM Training (6x6 Hexagonal)...\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Training beendet.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- SOM-Training -------------------------\n",
+    "som_x = 6 \n",
+    "som_y = 6\n",
+    "input_len = len(features)\n",
+    "sigma = 0.5\n",
+    "learning_rate = 0.5\n",
+    "\n",
+    "som = MiniSom(x=som_x, y=som_y, input_len=input_len, \n",
+    "              sigma=sigma, learning_rate=learning_rate, \n",
+    "              topology='hexagonal', neighborhood_function='gaussian', \n",
+    "              activation_distance='euclidean', random_seed=42)\n",
+    "\n",
+    "som.random_weights_init(data_scaled)\n",
+    "\n",
+    "print(f\"Starte SOM Training ({som_x}x{som_y} Hexagonal)...\")\n",
+    "som.train_random(data_scaled, 10000) \n",
+    "print(\"Training beendet.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "analyze_temp",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:18.056779Z",
+     "iopub.status.busy": "2026-01-05T22:12:18.056246Z",
+     "iopub.status.idle": "2026-01-05T22:12:20.971760Z",
+     "shell.execute_reply": "2026-01-05T22:12:20.971760Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Mean Temperature Map berechnet.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- Vorbereitung der Temperaturanalyse -------------------------\n",
+    "winner_coords = []\n",
+    "for x in data_scaled:\n",
+    "    w = som.winner(x)\n",
+    "    winner_coords.append(w)\n",
+    "\n",
+    "df_som['som_x'] = [c[0] for c in winner_coords]\n",
+    "df_som['som_y'] = [c[1] for c in winner_coords]\n",
+    "\n",
+    "# ------------------------- Berechnung der Mean Temperature Map -------------------------\n",
+    "temp_map = np.full((som_x, som_y), np.nan)\n",
+    "\n",
+    "agg = df_som.groupby(['som_x', 'som_y'])['temperature_in_c'].mean()\n",
+    "\n",
+    "for (gx, gy), val in agg.items():\n",
+    "    temp_map[gx, gy] = val\n",
+    "\n",
+    "print(\"Mean Temperature Map berechnet.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "plotting_func",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:20.974287Z",
+     "iopub.status.busy": "2026-01-05T22:12:20.974287Z",
+     "iopub.status.idle": "2026-01-05T22:12:20.980850Z",
+     "shell.execute_reply": "2026-01-05T22:12:20.980850Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# ------------------------- Plot-Funktion f\u00fcr PDF -------------------------\n",
+    "def plot_hex_map_to_axis(ax, data_matrix, title, cmap='viridis', label_suffix='', annotate=False):\n",
+    "    sy, sx = data_matrix.shape\n",
+    "    ax.set_aspect('equal')\n",
+    "    patches = []\n",
+    "    colors = []\n",
+    "    \n",
+    "    for y in range(sy):\n",
+    "        for x in range(sx):\n",
+    "            val = data_matrix[y, x]\n",
+    "            if np.isnan(val): \n",
+    "                continue \n",
+    "                \n",
+    "            offset = 0.5 if y % 2 != 0 else 0.0\n",
+    "            center_x = x + offset\n",
+    "            center_y = y * (np.sqrt(3) / 2)\n",
+    "            radius = 1 / np.sqrt(3)\n",
+    "            \n",
+    "            hex_poly = mpatches.RegularPolygon(\n",
+    "                (center_x, center_y), numVertices=6, radius=radius, \n",
+    "                orientation=np.radians(30), edgecolor='k', linewidth=0.5\n",
+    "            )\n",
+    "            patches.append(hex_poly)\n",
+    "            colors.append(val)\n",
+    "            \n",
+    "            if annotate:\n",
+    "                ax.text(center_x, center_y, f\"{val:.1f}\", ha='center', va='center', \n",
+    "                        fontsize=7, color='black', fontweight='bold')\n",
+    "            \n",
+    "    if not patches:\n",
+    "        return\n",
+    "\n",
+    "    collection = PatchCollection(patches, cmap=cmap, alpha=0.9)\n",
+    "    collection.set_array(np.array(colors))\n",
+    "    ax.add_collection(collection)\n",
+    "    \n",
+    "    ax.set_xlim(-0.5, sx + 0.5)\n",
+    "    ax.set_ylim(-0.5, sy * (np.sqrt(3)/2) + 0.5)\n",
+    "    ax.axis('off')\n",
+    "    ax.set_title(title, fontsize=12)\n",
+    "    return collection"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "generate_pdf",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-01-05T22:12:20.984393Z",
+     "iopub.status.busy": "2026-01-05T22:12:20.983374Z",
+     "iopub.status.idle": "2026-01-05T22:12:21.830389Z",
+     "shell.execute_reply": "2026-01-05T22:12:21.829883Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Output Folder: C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\4_Imputation\\4.3_Machine-Learning\\MiniSom_Results\\Run_2026-01-05_23-12-20\n",
+      "Erstelle Report: C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\4_Imputation\\4.3_Machine-Learning\\MiniSom_Results\\Run_2026-01-05_23-12-20\\SOM_Report_Temperature_Imputed.pdf ...\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Report fertiggestellt.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# ------------------------- PDF-Berichterstellung -------------------------\n",
+    "# Output in lokalen Ordner\n",
+    "output_root = base_dir / \"MiniSom_Results\"\n",
+    "output_root.mkdir(exist_ok=True)\n",
+    "\n",
+    "# ------------------------- Erstellung des Run-Ordners -------------------------\n",
+    "current_ts = datetime.now().strftime(\"%Y-%m-%d_%H-%M-%S\")\n",
+    "run_folder = output_root / f\"Run_{current_ts}\"\n",
+    "run_folder.mkdir(parents=True, exist_ok=True)\n",
+    "print(f\"Output Folder: {run_folder}\")\n",
+    "\n",
+    "\n",
+    "pdf_path = run_folder / \"SOM_Report_Temperature_Imputed.pdf\"\n",
+    "print(f\"Erstelle Report: {pdf_path} ...\")\n",
+    "\n",
+    "# ------------------------- Anzahl berechnen -------------------------\n",
+    "temp_count = df_som['temperature_in_c'].count()\n",
+    "with PdfPages(pdf_path) as pdf:\n",
+    "    \n",
+    "    # ------------------------- Beschreibungsseite -------------------------\n",
+    "    plt.figure(figsize=(8, 6))\n",
+    "    plt.text(0.5, 0.5, f\"SOM Analysis (Imputed Data)\\n\\nHexagonal Self-Organizing Map (6x6)\\nInput: Major Ions (Log+Gauss)\\nOverlay: Temperature (Mean & Dist)\\nFILTER: Only Temp > 10\\u00b0C\\n\\nTotal Data Points: {temp_count}\", \n",
+    "             ha='center', va='center', fontsize=20)\n",
+    "    plt.axis('off')\n",
+    "    pdf.savefig()\n",
+    "    plt.close()\n",
+    "    \n",
+    "    # ------------------------- Abstandsmatrix -------------------------\n",
+    "    fig, ax = plt.subplots(figsize=(8, 8))\n",
+    "    u_matrix = som.distance_map()\n",
+    "    col_u = plot_hex_map_to_axis(ax, u_matrix, \"U-Matrix (Distance Map)\", cmap='bone_r')\n",
+    "    plt.colorbar(col_u, ax=ax, fraction=0.046, pad=0.04, label='Distance')\n",
+    "    pdf.savefig(fig)\n",
+    "    plt.close(fig)\n",
+    "    \n",
+    "    # ------------------------- Durchschnittstemperatur -------------------------\n",
+    "    fig, ax = plt.subplots(figsize=(10, 10))\n",
+    "    col_t = plot_hex_map_to_axis(ax, temp_map, \"Mean Temperature per Cluster (> 10\u00b0C)\", cmap='coolwarm', annotate=True)\n",
+    "    plt.colorbar(col_t, ax=ax, fraction=0.046, pad=0.04, label='Temp \u00b0C')\n",
+    "    pdf.savefig(fig)\n",
+    "    plt.close(fig)\n",
+    "    \n",
+    "    # ------------------------- Component Plane -------------------------\n",
+    "    W = som.get_weights()\n",
+    "    fig, axes = plt.subplots(2, 3, figsize=(12, 8))\n",
+    "    axes = axes.flatten()\n",
+    "    for i, feature in enumerate(features):\n",
+    "        short = feature.split(\"_\")[0]\n",
+    "        col_c = plot_hex_map_to_axis(axes[i], W[:,:,i], f\"{short}\", cmap='viridis')\n",
+    "    plt.suptitle(\"Component Planes (Ion Distribution)\")\n",
+    "    plt.tight_layout()\n",
+    "    pdf.savefig(fig)\n",
+    "    plt.close(fig)\n",
+    "\n",
+    "print(\"Report fertiggestellt.\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

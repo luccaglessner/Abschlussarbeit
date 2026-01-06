@@ -138,6 +138,37 @@ def main():
     else:
         print(f"Fehler: MiniSom-Notebook nicht gefunden: {minisom_nb}")
 
+    # ----------------------------------------- Schritt 8b: 4_Imputation Pipeline -----------------------------------------
+    print(f"\n--- Schritt 8b: 4_Imputation Pipeline ---")
+    
+    # 4.1 Imputation
+    imp_nb = BASE_DIR / "4_Imputation/4.1_Imputation/VAE_Imputation.ipynb"
+    if imp_nb.exists():
+        if not run_notebook(imp_nb):
+            print("FEHLER in 4.1 Imputation! Pipeline gestoppt.")
+            input("Taste drücken zum Beenden...")
+            sys.exit(1)
+    else:
+        print(f"Fehler: 4.1 Notebook nicht gefunden: {imp_nb}")
+
+    # 4.2 Preprocessing
+    prep_imp_nb = BASE_DIR / "4_Imputation/4.2_Preprocessing/Preprocessing.ipynb"
+    if prep_imp_nb.exists():
+        if not run_notebook(prep_imp_nb):
+            print("FEHLER in 4.2 Preprocessing! Pipeline gestoppt.")
+            input("Taste drücken zum Beenden...")
+            sys.exit(1)
+    else:
+         print(f"Fehler: 4.2 Notebook nicht gefunden: {prep_imp_nb}")
+
+    # 4.3 Machine Learning
+    ml_imp_nb = BASE_DIR / "4_Imputation/4.3_Machine-Learning/MiniSom_Machine-Learning.ipynb"
+    if ml_imp_nb.exists():
+        if not run_notebook(ml_imp_nb):
+             print("WARNUNG: Fehler in 4.3 ML! (Pipeline läuft weiter)")
+    else:
+          print(f"Fehler: 4.3 Notebook nicht gefunden: {ml_imp_nb}")
+
     # ----------------------------------------- Schritt 9: 5.1 Synthetic Data Generation -----------------------------------------
     print(f"\n--- Schritt 9: 5_Synthetic-Data/5.1_Synthetic-Data (VAE Generation) ---")
     vae_nb = BASE_DIR / "5_Synthetic-Data/5.1_Synthetic-Data" / "Variational-Autoencoder" / "VAE_Synthetic_Data_Generation.ipynb"
