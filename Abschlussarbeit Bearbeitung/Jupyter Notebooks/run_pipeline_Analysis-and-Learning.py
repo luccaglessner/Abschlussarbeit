@@ -35,6 +35,35 @@ def run_notebook(notebook_path):
         print(f"  -> UNERWARTETER FEHLER: {e}")
         return False
 
+def export_to_pdf(notebook_path):
+    # ------------------------- Exportiert ein Notebook als PDF -------------------------
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] PDF-Export: {notebook_path.name}")
+    try:
+        cmd = [
+            sys.executable, "-m", "jupyter", "nbconvert",
+            "--to", "pdf",
+            str(notebook_path)
+        ]
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        print(f"  -> PDF erfolgreich erstellt.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"  -> FEHLER beim PDF-Export!")
+        # Optional: Versuche HTML Export als Fallback wenn LaTeX fehlt
+        print(f"  -> Versuche HTML-Export als Fallback...")
+        try:
+             cmd_html = [
+                sys.executable, "-m", "jupyter", "nbconvert",
+                "--to", "html",
+                str(notebook_path)
+            ]
+             subprocess.run(cmd_html, capture_output=True, text=True, check=True)
+             print(f"  -> HTML-Fallback erfolgreich erstellt.")
+        except:
+             print("  -> Auch HTML-Export fehlgeschlagen.")
+        
+        return False
+
 def main():
     print("========================================================")
     print("   Starte Ausführung: Analysis and Learning Pipeline")
@@ -148,6 +177,8 @@ def main():
             print("FEHLER in 4.1 Imputation! Pipeline gestoppt.")
             input("Taste drücken zum Beenden...")
             sys.exit(1)
+        # NEU: PDF EXPORT
+        export_to_pdf(imp_nb)
     else:
         print(f"Fehler: 4.1 Notebook nicht gefunden: {imp_nb}")
 
@@ -177,8 +208,8 @@ def main():
             print("WARNUNG: Fehler bei VAE Generation! Pipeline wird gestoppt.")
             input("Taste drücken zum Beenden...")
             sys.exit(1)
-    else:
-        print(f"Fehler: VAE-Notebook nicht gefunden: {vae_nb}")
+        # NEU: PDF EXPORT
+        export_to_pdf(vae_nb)
 
     # ----------------------------------------- Schritt 10: 5.2 Preprocessing (Synthetic) -----------------------------------------
     print(f"\n--- Schritt 10: 5_Synthetic-Data/5.2_Preprocessing (Synthetic) ---")
