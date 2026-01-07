@@ -35,35 +35,6 @@ def run_notebook(notebook_path):
         print(f"  -> UNERWARTETER FEHLER: {e}")
         return False
 
-def export_to_pdf(notebook_path):
-    # ------------------------- Exportiert ein Notebook als PDF -------------------------
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] PDF-Export: {notebook_path.name}")
-    try:
-        cmd = [
-            sys.executable, "-m", "jupyter", "nbconvert",
-            "--to", "pdf",
-            str(notebook_path)
-        ]
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print(f"  -> PDF erfolgreich erstellt.")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"  -> FEHLER beim PDF-Export!")
-        # Optional: Versuche HTML Export als Fallback wenn LaTeX fehlt
-        print(f"  -> Versuche HTML-Export als Fallback...")
-        try:
-             cmd_html = [
-                sys.executable, "-m", "jupyter", "nbconvert",
-                "--to", "html",
-                str(notebook_path)
-            ]
-             subprocess.run(cmd_html, capture_output=True, text=True, check=True)
-             print(f"  -> HTML-Fallback erfolgreich erstellt.")
-        except:
-             print("  -> Auch HTML-Export fehlgeschlagen.")
-        
-        return False
-
 def main():
     print("========================================================")
     print("   Starte Ausführung: Analysis and Learning Pipeline")
@@ -167,8 +138,8 @@ def main():
     else:
         print(f"Fehler: MiniSom-Notebook nicht gefunden: {minisom_nb}")
 
-    # ----------------------------------------- Schritt 8b: 4_Imputation Pipeline -----------------------------------------
-    print(f"\n--- Schritt 8b: 4_Imputation Pipeline ---")
+    # ----------------------------------------- Schritt 9: 4_Imputation Pipeline -----------------------------------------
+    print(f"\n--- Schritt 9: 4_Imputation Pipeline ---")
     
     # 4.1 Imputation
     imp_nb = BASE_DIR / "4_Imputation/4.1_Imputation/VAE_Imputation.ipynb"
@@ -177,8 +148,6 @@ def main():
             print("FEHLER in 4.1 Imputation! Pipeline gestoppt.")
             input("Taste drücken zum Beenden...")
             sys.exit(1)
-        # NEU: PDF EXPORT
-        export_to_pdf(imp_nb)
     else:
         print(f"Fehler: 4.1 Notebook nicht gefunden: {imp_nb}")
 
@@ -201,7 +170,7 @@ def main():
           print(f"Fehler: 4.3 Notebook nicht gefunden: {ml_imp_nb}")
 
     # ----------------------------------------- Schritt 9: 5.1 Synthetic Data Generation -----------------------------------------
-    print(f"\n--- Schritt 9: 5_Synthetic-Data/5.1_Synthetic-Data (VAE Generation) ---")
+    print(f"\n--- Schritt 10: 5_Synthetic-Data/5.1_Synthetic-Data (VAE Generation) ---")
     vae_nb = BASE_DIR / "5_Synthetic-Data/5.1_Synthetic-Data" / "Variational-Autoencoder" / "VAE_Synthetic_Data_Generation.ipynb"
     if vae_nb.exists():
         if not run_notebook(vae_nb): 
