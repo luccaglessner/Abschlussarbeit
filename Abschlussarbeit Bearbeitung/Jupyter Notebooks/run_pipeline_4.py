@@ -8,6 +8,8 @@ from datetime import datetime
 # ----------------------------------------------- Basisverzeichnis -----------------------------------------------
 BASE_DIR = Path(__file__).parent.resolve()
 
+import pipeline_logger
+
 def run_notebook(notebook_path):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Starte: {notebook_path.name}")
     try:
@@ -17,11 +19,17 @@ def run_notebook(notebook_path):
             "--to", "notebook", "--execute", "--inplace",
             str(notebook_path)
         ]
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # Stderr für Logging erfassen
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         print(f"  -> Fertig in {time.time() - start_time:.2f}s")
         return True
     except subprocess.CalledProcessError as e:
         print(f"  -> FEHLER: {e.stderr}")
+        pipeline_logger.log_error(f"Fehler bei Ausführung von {notebook_path.name}", exception=e, stderr=e.stderr)
+        return False
+    except Exception as e:
+        print(f"  -> UNERWARTETER FEHLER: {e}")
+        pipeline_logger.log_error(f"Unerwarteter Fehler bei {notebook_path.name}", exception=e)
         return False
 
 def main():
