@@ -10,17 +10,23 @@ BASE_DIR = Path(__file__).parent.resolve()
 
 import pipeline_logger
 
-def run_notebook(notebook_path):
+def run_notebook(notebook_path, env_vars=None):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Starte: {notebook_path.name}")
     try:
         start_time = time.time()
+        
+        # Prepare Environment
+        env = os.environ.copy()
+        if env_vars:
+            env.update(env_vars)
+            
         cmd = [
             sys.executable, "-m", "jupyter", "nbconvert",
             "--to", "notebook", "--execute", "--inplace",
             str(notebook_path)
         ]
         # Stderr für Logging erfassen
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, env=env, check=True)
         print(f"  -> Fertig in {time.time() - start_time:.2f}s")
         return True
     except subprocess.CalledProcessError as e:
@@ -35,33 +41,81 @@ def run_notebook(notebook_path):
 def main():
     print("=== Pipeline 4: Imputation & Machine Learning ===")
     
-    # 4.1 Imputation
-    nb_41 = BASE_DIR / "4_Imputation/4.1_Imputation/VAE_Imputation.ipynb"
-    if nb_41.exists():
-        if not run_notebook(nb_41):
-            print("Kritischer Fehler in 4.1. Abbruch.")
-            sys.exit(1)
-    else:
-        print(f"Fehler: {nb_41} nicht gefunden.")
+    # Configuration for Strategies
+    strategies = [
+        {
+            "name": "Main-Ions",
+            "imputation_dir": "4.1_Imputation-Main-Ions",
+            "imputation_nb": "VAE_Imputation.ipynb",
+            "imputation_file": "Imputed_Data_Raw.csv",
+            "output_subdir": "Output_MainIons"
+        },
+        {
+            "name": "Everything",
+            "imputation_dir": "4.2_Imputation-Everything",
+            "imputation_nb": "MiniSom_Machine-Learning-Everything.ipynb", # Assuming this is intended as imputation or creates one
+            "imputation_file": "Imputed_Data_Raw.csv", # Assuming a standard output name if it were an imputation
+            "output_subdir": "Output_Everything"
+        }
+    ]
 
-    # 4.2 Vorverarbeitung
-    nb_42 = BASE_DIR / "4_Imputation/4.2_Preprocessing/Preprocessing.ipynb"
-    if nb_42.exists():
-        if not run_notebook(nb_42):
-            print("Kritischer Fehler in 4.2. Abbruch.")
-            sys.exit(1)
-    else:
-        print(f"Fehler: {nb_42} nicht gefunden.")
+    preprocessing_nb = BASE_DIR / "4_Imputation/4.3_Preprocessing/Preprocessing.ipynb"
+    ml_nb = BASE_DIR / "4_Imputation/4.4_Machine-Learning-MiniSOM/MiniSom_Machine-Learning.ipynb"
 
-    # 4.3 Maschinelles Lernen (Haupt-Ionen)
-    nb_43 = BASE_DIR / "4_Imputation/4.3_Machine-Learning-Main-Ions/MiniSom_Machine-Learning.ipynb"
-    if nb_43.exists(): run_notebook(nb_43)
-    else: print(f"Fehler: {nb_43} nicht gefunden.")
+    for strat in strategies:
+        print(f"\n--- Strategy: {strat['name']} ---")
+        
+        # 1. Imputation
+        imp_dir = BASE_DIR / "4_Imputation" / strat["imputation_dir"]
+        imp_nb = imp_dir / strat["imputation_nb"]
+        imp_output = imp_dir / strat["imputation_file"]
+        
+        if imp_nb.exists():
+            print(f"Running Imputation: {imp_nb.name}")
+            if not run_notebook(imp_nb):
+                print(f"Skipping rest of strategy {strat['name']} due to Imputation failure.")
+                continue
+        else:
+            print(f"Warning: Imputation Notebook not found: {imp_nb}")
+            # Proceed only if file exists (maybe pre-calculated)
+        
+        if not imp_output.exists():
+            print(f"Imputation Output File not found: {imp_output}")
+            print(f"Skipping Preprocessing & ML for {strat['name']} (No input data).")
+            continue
 
-    # 4.4 Maschinelles Lernen (Alle Features)
-    nb_44 = BASE_DIR / "4_Imputation/4.4_Machine-Learning-Everything/MiniSom_Machine-Learning-Everything.ipynb"
-    if nb_44.exists(): run_notebook(nb_44)
-    else: print(f"Fehler: {nb_44} nicht gefunden.")
+        # 2. Preprocessing
+        print(f"Running Preprocessing on {strat['name']} data...")
+        prep_out_dir = BASE_DIR / "4_Imputation/4.3_Preprocessing" / strat["output_subdir"]
+        
+        env_prep = {
+            "PREPROCESSING_INPUT_FILE": str(imp_output),
+            "PREPROCESSING_OUTPUT_DIR": str(prep_out_dir)
+        }
+        
+        if preprocessing_nb.exists():
+            if not run_notebook(preprocessing_nb, env_vars=env_prep):
+                print("Preprocessing failed.")
+                continue
+        else:
+            print(f"Preprocessing NB not found: {preprocessing_nb}")
+            continue
+            
+        prep_output_file = prep_out_dir / "Preprocessed_SOM_Ready.csv"
+        if not prep_output_file.exists():
+            print(f"Preprocessing Output not found: {prep_output_file}. Skipping ML.")
+            continue
+            
+        # 3. Machine Learning
+        print(f"Running Machine Learning on {strat['name']} data...")
+        env_ml = {
+            "ML_INPUT_FILE": str(prep_output_file)
+        }
+        
+        if ml_nb.exists():
+            run_notebook(ml_nb, env_vars=env_ml)
+        else:
+            print(f"ML Notebook not found: {ml_nb}")
 
     print("\n--- Pipeline 4 abgeschlossen ---")
 
