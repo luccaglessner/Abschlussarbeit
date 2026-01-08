@@ -1,1 +1,17 @@
 Abschlussarbeit Bearbeitung/Jupyter Notebooks/OLD_Stored/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated Output Folders (Intermediate Steps)
+Angepasste_Datenbanken/
+Kartierung/
+globales_Datenschema/
+Rock-Type_Mapping/
+Datenanalyse/
+Rock-Type_Analysis/
+MiniSom_Results/
+**/Preprocessing/
+
+# Generated Reports
+*.pdf
