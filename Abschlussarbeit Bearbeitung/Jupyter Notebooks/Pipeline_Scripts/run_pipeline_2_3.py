@@ -36,6 +36,23 @@ def run_notebook(notebook_path):
 def main():
     print("=== Pipeline 2 & 3: Analytik & Standard Machine Learning ===")
     
+    # --- Interaktive Abfrage: Modus für SOM ---
+    print("\n[KONFIGURATION] Bitte wähle den Ausführungsmodus für Machine Learning (Schritt 3.2):")
+    print("  1) MANUAL (Standard: Konfiguration im Notebook)")
+    print("  2) AUTO / LOOP (Automatische Kombinationstestung)")
+    choice = input("Deine Wahl (1/2): ").strip()
+    
+    if choice == '2':
+        os.environ['SOM_MODE'] = 'LOOP'
+        print(">> Modus gesetzt: LOOP (Auto)\n")
+    else:
+        os.environ['SOM_MODE'] = 'MANUAL'
+        print(">> Modus gesetzt: MANUAL\n")
+
+    
+
+
+    
     # 2.1 - 2.3 Explorative Analysen
     notebooks = [
         BASE_DIR / "2_Analysis/2.1_Explorative-Datenanalyse/Data_Exploration.ipynb",
@@ -80,4 +97,10 @@ def main():
     print("\n--- Pipeline 2 & 3 abgeschlossen ---")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"\n[CRITICAL ERROR] Die Pipeline wurde unerwartet beendet:\n{e}")
+    finally:
+        print("\n" + "="*60)
+        input("Drücken Sie ENTER, um das Fenster zu schließen...")
