@@ -3,6 +3,9 @@ Abschlussarbeit Bearbeitung/Jupyter Notebooks/OLD_Stored/
 # Jupyter
 .ipynb_checkpoints/
 
+# Python
+__pycache__/
+
 # Generated Output Folders (Intermediate Steps)
 Angepasste_Datenbanken/
 Kartierung/
@@ -15,3 +18,7 @@ MiniSom_Results/
 
 # Generated Reports
 *.pdf
+
+# Wrapper Website
+Abschlussarbeit Bearbeitung/Wrapper_Website/outputs/
+Abschlussarbeit Bearbeitung/Wrapper_Website/uploads/
