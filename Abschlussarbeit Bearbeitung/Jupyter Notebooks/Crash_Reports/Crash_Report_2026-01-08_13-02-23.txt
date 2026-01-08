@@ -1,0 +1,152 @@
+================================================================================
+                            FEHLERPROTOKOLL (CRASH REPORT)
+================================================================================
+
+Zeitstempel:       08.01.2026 13:02:23
+Kontext:           Fehler bei Ausführung von VAE_Imputation_Everything.ipynb
+Ausgeführtes Skript: C:\Users\lucca\OneDrive\SPEICHER\Hochschule\7. Semester\Abschlussarbeit Bearbeitung\Jupyter Notebooks\OLD_Stored\run_pipeline_4.py
+
+--------------------------------------------------------------------------------
+FEHLERBESCHREIBUNG
+--------------------------------------------------------------------------------
+Typ: CalledProcessError
+Meldung: Command '['C:\\Users\\lucca\\AppData\\Local\\Programs\\Python\\Python312\\python.exe', '-m', 'jupyter', 'nbconvert', '--to', 'notebook', '--execute', '--inplace', 'C:\\Users\\lucca\\OneDrive\\SPEICHER\\Hochschule\\7. Semester\\Abschlussarbeit Bearbeitung\\Jupyter Notebooks\\OLD_Stored\\4_Imputation\\4.2_Imputation-Everything\\VAE_Imputation_Everything.ipynb']' returned non-zero exit status 1.
+
+Traceback:
+  File "C:\Users\lucca\OneDrive\SPEICHER\Hochschule\7. Semester\Abschlussarbeit Bearbeitung\Jupyter Notebooks\OLD_Stored\run_pipeline_4.py", line 32, in run_notebook
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env, check=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+
+SUBPROZESS STDERR (Standardfehlerausgabe):
+[NbConvertApp] Converting notebook C:\Users\lucca\OneDrive\SPEICHER\Hochschule\7. Semester\Abschlussarbeit Bearbeitung\Jupyter Notebooks\OLD_Stored\4_Imputation\4.2_Imputation-Everything\VAE_Imputation_Everything.ipynb to notebook
+C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\zmq\_future.py:724: RuntimeWarning: Proactor event loop does not implement add_reader family of methods required for zmq. Registering an additional selector thread for add_reader support via tornado. Use `asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())` to avoid this warning.
+  self._get_loop()
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Scripts\jupyter-nbconvert.EXE\__main__.py", line 7, in <module>
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\jupyter_core\application.py", line 283, in launch_instance
+    super().launch_instance(argv=argv, **kwargs)
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\traitlets\config\application.py", line 1075, in launch_instance
+    app.start()
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\nbconvertapp.py", line 420, in start
+    self.convert_notebooks()
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\nbconvertapp.py", line 597, in convert_notebooks
+    self.convert_single_notebook(notebook_filename)
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\nbconvertapp.py", line 563, in convert_single_notebook
+    output, resources = self.export_single_notebook(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\nbconvertapp.py", line 487, in export_single_notebook
+    output, resources = self.exporter.from_filename(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\exporters\exporter.py", line 201, in from_filename
+    return self.from_file(f, resources=resources, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\exporters\exporter.py", line 220, in from_file
+    return self.from_notebook_node(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\exporters\notebook.py", line 36, in from_notebook_node
+    nb_copy, resources = super().from_notebook_node(nb, resources, **kw)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\exporters\exporter.py", line 154, in from_notebook_node
+    nb_copy, resources = self._preprocess(nb_copy, resources)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\exporters\exporter.py", line 353, in _preprocess
+    nbc, resc = preprocessor(nbc, resc)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\preprocessors\base.py", line 48, in __call__
+    return self.preprocess(nb, resources)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\preprocessors\execute.py", line 103, in preprocess
+    self.preprocess_cell(cell, resources, index)
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbconvert\preprocessors\execute.py", line 124, in preprocess_cell
+    cell = self.execute_cell(cell, index, store_history=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\jupyter_core\utils\__init__.py", line 165, in wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 684, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbclient\client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "C:\Users\lucca\AppData\Local\Programs\Python\Python312\Lib\site-packages\nbclient\client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+# ------------------------- Pfade definieren -------------------------
+base_dir = Path.cwd()
+if base_dir.name != "4.1_Imputation":
+    # Fallback für Entwicklung, falls Notebook nicht im richtigen Ordner gestartet wurde
+    # (Anpassen je nach Umgebung)
+    pass
+
+notebooks_root = base_dir.parents[1]
+
+# ------------------------- Pfad 1: Bereinigte Daten (Training) - Output 2.4 -------------------------
+clean_db_root = notebooks_root / "1_Acquisition" / "1.1_Data-Acquisition-Wrapper" / "Angepasste_Datenbanken" / "Nach_IBF-und-Temp_Filter" / "Komplette_Datenbank"
+
+# ------------------------- Pfad 2: Rohdaten (Imputation) - Output 1.1 -------------------------
+raw_db_root = notebooks_root / "1_Acquisition" / "1.1_Data-Acquisition-Wrapper" / "Angepasste_Datenbanken" / "Nach_Acquisition" / "Komplette_Datenbank"
+
+# ------------------------- Hilfsfunktion zum Finden der neuesten CSV -------------------------
+def get_latest_csv(root_path, name_marker="Komplette_Datenbank"):
+    if not root_path.exists():
+        raise FileNotFoundError(f"Pfad nicht gefunden: {root_path}")
+    
+    # Alle Zeitstempel-Ordner
+    folders = [f for f in root_path.iterdir() if f.is_dir()]
+    if not folders:
+        raise FileNotFoundError(f"Keine Ordner in {root_path}")
+        
+    # Sortieren nach Name (da Zeitstempel Format YYYY-MM-DD... ist das chronologisch)
+    latest_folder = max(folders, key=lambda x: x.name)
+    
+    csv_files = list(latest_folder.glob("*.csv"))
+    if not csv_files:
+         raise FileNotFoundError(f"Keine CSV in {latest_folder}")
+            
+    # Normalerweise gibt es nur eine, wir nehmen die erste/einzige
+    return csv_files[0]
+
+
+clean_csv_path = get_latest_csv(clean_db_root)
+raw_csv_path = get_latest_csv(raw_db_root)
+
+print(f"Training auf Clean Data: {clean_csv_path.parent.name}/{clean_csv_path.name}")
+print(f"Imputation auf Raw Data: {raw_csv_path.parent.name}/{raw_csv_path.name}")
+
+# ------------------------- Daten laden -------------------------
+df_clean = pd.read_csv(clean_csv_path, low_memory=False)
+df_raw = pd.read_csv(raw_csv_path, low_memory=False)
+
+print(f"Clean Data Shape: {df_clean.shape}")
+print(f"Raw Data Shape:   {df_raw.shape}")
+------------------
+
+
+[1;31m---------------------------------------------------------------------------[0m
+[1;31mFileNotFoundError[0m                         Traceback (most recent call last)
+Cell [1;32mIn[2], line 37[0m
+[0;32m     33[0m     [38;5;66;03m# Normalerweise gibt es nur eine, wir nehmen die erste/einzige[39;00m
+[0;32m     34[0m     [38;5;28;01mreturn[39;00m csv_files[[38;5;241m0[39m]
+[1;32m---> 37[0m clean_csv_path [38;5;241m=[39m [43mget_latest_csv[49m[43m([49m[43mclean_db_root[49m[43m)[49m
+[0;32m     38[0m raw_csv_path [38;5;241m=[39m get_latest_csv(raw_db_root)
+[0;32m     40[0m [38;5;28mprint[39m([38;5;124mf[39m[38;5;124m"[39m[38;5;124mTraining auf Clean Data: [39m[38;5;132;01m{[39;00mclean_csv_path[38;5;241m.[39mparent[38;5;241m.[39mname[38;5;132;01m}[39;00m[38;5;124m/[39m[38;5;132;01m{[39;00mclean_csv_path[38;5;241m.[39mname[38;5;132;01m}[39;00m[38;5;124m"[39m)
+
+Cell [1;32mIn[2], line 19[0m, in [0;36mget_latest_csv[1;34m(root_path, name_marker)[0m
+[0;32m     17[0m [38;5;28;01mdef[39;00m [38;5;21mget_latest_csv[39m(root_path, name_marker[38;5;241m=[39m[38;5;124m"[39m[38;5;124mKomplette_Datenbank[39m[38;5;124m"[39m):
+[0;32m     18[0m     [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m root_path[38;5;241m.[39mexists():
+[1;32m---> 19[0m         [38;5;28;01mraise[39;00m [38;5;167;01mFileNotFoundError[39;00m([38;5;124mf[39m[38;5;124m"[39m[38;5;124mPfad nicht gefunden: [39m[38;5;132;01m{[39;00mroot_path[38;5;132;01m}[39;00m[38;5;124m"[39m)
+[0;32m     21[0m     [38;5;66;03m# Alle Zeitstempel-Ordner[39;00m
+[0;32m     22[0m     folders [38;5;241m=[39m [f [38;5;28;01mfor[39;00m f [38;5;129;01min[39;00m root_path[38;5;241m.[39miterdir() [38;5;28;01mif[39;00m f[38;5;241m.[39mis_dir()]
+
+[1;31mFileNotFoundError[0m: Pfad nicht gefunden: C:\Users\lucca\OneDrive\SPEICHER\Hochschule\7. Semester\Abschlussarbeit Bearbeitung\Jupyter Notebooks\OLD_Stored\1_Acquisition\1.1_Data-Acquisition-Wrapper\Angepasste_Datenbanken\Nach_IBF-und-Temp_Filter\Komplette_Datenbank
+
+
+
+================================================================================
+Dieses Dokument dient der technischen Fehleranalyse und Reproduktion.
+Ende des Protokolls.

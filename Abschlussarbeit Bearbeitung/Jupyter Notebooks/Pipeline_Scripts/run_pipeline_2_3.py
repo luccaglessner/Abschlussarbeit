@@ -66,6 +66,10 @@ def main():
         filter_nb = dq_root / "2.4_Filter_Database.ipynb"
         if filter_nb.exists(): run_notebook(filter_nb)
 
+    # 2.5 Full Datasets Analysis (Vollständigkeits-Check)
+    full_analysis_nb = BASE_DIR / "2_Analysis/2.5_Full-Datasets-Analysis/Full_Dataset_Analysis.ipynb"
+    if full_analysis_nb.exists(): run_notebook(full_analysis_nb)
+
     # 3. Machine Learning
     prep_nb = BASE_DIR / "3_Machine-Learning/3.1_Preprocessing/Preprocessing.ipynb"
     if prep_nb.exists(): run_notebook(prep_nb)
