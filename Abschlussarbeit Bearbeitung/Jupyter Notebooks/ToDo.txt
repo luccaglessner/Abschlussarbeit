@@ -1,0 +1,16 @@
+SOM
+
+-> Darstellung für Chemie hinzufügen
+-> Nummerierung der Cluster auf Map
+-> x Cluster = x Seiten mit vollständiger Analyse je Cluster (Temperatur, Rock Type, Chemie, ….)
+-> Abschlussseite (Test mit x Clustern in einem Plot) -> bspw. mit Annäherungskurve in verschiedenen Farben [/angenäherte Dichteverteilungsfunktion]
+
+--------------------------------
+
+Imputation
+
+-> unüberwachtes Lernen auf vollständigen Datenzeilen [für ausgewählte Tupel (überprüfen was übrig bleibt)]
+-> Lernen der Verteilung (welches Modell verwenden (?))
+
+-> In einem Inferenzskript dann:
+-> Lernen -> Erstmal ein Attribut weglassen -> Imputation -> mit "echten" Werten vergleichen
