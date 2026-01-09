@@ -1,10 +1,12 @@
-
 import os
 import subprocess
 import sys
+import time
+import pipeline_logger
+
 from pathlib import Path
 from datetime import datetime
-import pipeline_logger
+
 
 # ------------------------- Konfiguration -------------------------
 BASE_DIR = Path(r"C:\Users\lucca\OneDrive\SPEICHER\Hochschule\7. Semester\Abschlussarbeit Bearbeitung\Jupyter Notebooks")
@@ -71,41 +73,9 @@ def main():
 
     procs = []
 
-    # ----------------------------- Start Training -----------------------------
-    print(f"\n[1/3] Starte 4.1 für Training:")
-    cmd_4_1 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_1)]
-    p_4_1 = subprocess.Popen(cmd_4_1, cwd=NOTEBOOK_4_1.parent)
-    procs.append(("4.1 Training", p_4_1))
-    
-    # ----------------------------- Ordner erstellen, kurz warten -----------------------------
-    print("5s auf Erstellen des Ordners warten...")
-    import time
-    time.sleep(5)
-
-    # ----------------------------- Inferenzskript starten -----------------------------
-    print(f"\n[2/3] Starte 4.2 für Inferenzskript:")
-    cmd_4_2 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_2)]
-    p_4_2 = subprocess.Popen(cmd_4_2, cwd=NOTEBOOK_4_2.parent)
-    procs.append(("4.2 Inference", p_4_2))
-    
-    time.sleep(5)
-
-    # ----------------------------- Auswertung starten -----------------------------
-    print(f"\n[3/3] Starte 4.3 für Auswertung:")
-    cmd_4_3 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_3)]
-    p_4_3 = subprocess.Popen(cmd_4_3, cwd=NOTEBOOK_4_3.parent)
-    procs.append(("4.3 Evaluation", p_4_3))
-
-    print("\nAlle Prozesse laufen")
-    
-    # ------------------------- Fortschrittsanzeige -------------------------
-    import glob
-    
     # ----------------------------- Aktives Machine Learning Modell finden -----------------------------
-    # hier: letztes Modell 
     start_ts = time.time()
     models_root = NOTEBOOK_4_1.parent / "Models"
-    active_model_dir = None
     
     # ----------------------------- Hilfsfunktion -----------------------------
     def get_latest_model_dir():
@@ -114,38 +84,94 @@ def main():
         if not subdirs: return None
         # ----------------------------- Höchster Timestamp -----------------------------
         latest = max(subdirs, key=lambda d: d.stat().st_mtime)
-        # ----------------------------- Schauen ob es neuste Modifikation is -----------------------------
+        # ----------------------------- Schauen ob es neuste Modifikation ist -----------------------------
         if latest.stat().st_mtime > start_ts - 60:
             return latest
         return None
 
-    # ----------------------------- Warten bis Ordner generiert sind -----------------------------
+    # ----------------------------- Start Training -----------------------------
+    print(f"\n[1/3] Starte 4.1 für Training:")
+    cmd_4_1 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_1)]
+    p_4_1 = subprocess.Popen(cmd_4_1, cwd=NOTEBOOK_4_1.parent)
+    procs.append(("4.1 Training", p_4_1))
+    
+    # ----------------------------- Warten auf Modell-Ordner -----------------------------
+    print("Warte auf Erstellen des Modell-Ordners durch 4.1...")
+    active_model_dir = None
+    
     while active_model_dir is None:
+        # ------------------------- Vergangenes Problem: Viele Abstürze bei 4.1 - hier Prüfung -------------------------
+        if p_4_1.poll() is not None:
+            print("4.1 Training wurde unerwartet beendet")
+            break
+            
         active_model_dir = get_latest_model_dir()
         if active_model_dir:
-            print(f"Aktiven Ordner gefunden: {active_model_dir.name}. Erste Erstellung kann bis zu 10 Minuten dauern.")
-            break
-        
-        # ----------------------------- Prüfen ob Training beendet ist -----------------------------
-        if p_4_1.poll() is not None:
-            print("4.1 Training beendet")
+            print(f"Aktiven Ordner gefunden: {active_model_dir.name}. Generierung kann anfangs bis zu 15 Minuten dauern.")
             break
         time.sleep(2)
+
+    p_4_2 = None
+    p_4_3 = None
+
+    if active_model_dir:
+        # ----------------------------- Inferenzskript starten -----------------------------
+        print(f"\n[2/3] Starte 4.2 für Inferenzskript:")
+        cmd_4_2 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_2)]
+        p_4_2 = subprocess.Popen(cmd_4_2, cwd=NOTEBOOK_4_2.parent)
+        procs.append(("4.2 Inference", p_4_2))
         
-    # ----------------------------- Prüfung Loop -----------------------------
+        # ----------------------------- Warten auf Ergebnis-Ordner -----------------------------
+        results_root = NOTEBOOK_4_2.parent / "Imputation_Results" / active_model_dir.name
+        print(f"Warte auf Ergebnis-Ordner: {results_root.name}...")
+        
+        results_created = False
+        while not results_created:
+             if p_4_2.poll() is not None:
+                 print("4.2 Inference wurde unerwartet beendet!")
+                 break
+             
+             if results_root.exists():
+                 print("Ergebnis-Ordner wurde erstellt.")
+                 results_created = True
+                 break
+             time.sleep(2)
+             
+        if results_created:
+            # ----------------------------- Auswertung starten -----------------------------
+            print(f"\n[3/3] Starte 4.3 für Auswertung:")
+            cmd_4_3 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_3)]
+            p_4_3 = subprocess.Popen(cmd_4_3, cwd=NOTEBOOK_4_3.parent)
+            procs.append(("4.3 Evaluation", p_4_3))
+
+    if not p_4_1 and not p_4_2 and not p_4_3: # ------------------------- Fehlerüberprüfung, da Probleme mit Abstürzen -------------------------
+         print("Keine Prozesse gestartet.")
+         return
+
+    print("\nAlle Prozesse laufen")
+    
+    # ------------------------- Fortschrittsanzeige -------------------------
     known_models = set()
     known_results = set()
     
-    # ----------------------------- Ergebnisordner für 4.2 -----------------------------
-    results_root = NOTEBOOK_4_2.parent / "Imputation_Results" / (active_model_dir.name if active_model_dir else "UNKNOWN")
+    # ----------------------------- Ergebnisordner für 4.2 definieren falls noch nicht geschehen -----------------------------
+    results_root = None
+    if active_model_dir:
+         results_root = NOTEBOOK_4_2.parent / "Imputation_Results" / active_model_dir.name
 
     while True:
         # ----------------------------- Prüfen ob Prozesse beendet sind -----------------------------
-        p41_status = p_4_1.poll()
-        p42_status = p_4_2.poll()
-        p43_status = p_4_3.poll()
+        p41_status = p_4_1.poll() if p_4_1 else None
+        p42_status = p_4_2.poll() if p_4_2 else None
+        p43_status = p_4_3.poll() if p_4_3 else None
         
-        if p41_status is not None and p42_status is not None and p43_status is not None:
+        # ------------------------- Schauen ob alle Prozesse beendet wurden -------------------------
+        all_done = True
+        if p_4_1 and p41_status is None: all_done = False
+        if p_4_2 and p42_status is None: all_done = False
+        if p_4_3 and p43_status is None: all_done = False
+        
+        if all_done:
             break
             
         # ----------------------------- Prüfen ob Model Ordner generiert sind -----------------------------
@@ -157,7 +183,7 @@ def main():
                 known_models.add(m)
                 
         # ----------------------------- Prüfen ob Ergebnis Ordner generiert sind -----------------------------
-        if results_root.exists():
+        if results_root and results_root.exists():
             current_results = set(f.name for f in results_root.glob("Imputation_Results_*.csv"))
             new_results = current_results - known_results
             for r in sorted(new_results):
@@ -165,16 +191,24 @@ def main():
                 known_results.add(r)
                 
         # ----------------------------- Prüfen ob Evaluation Summary generiert ist -----------------------------
-        if results_root.exists() and (results_root / "Evaluation_Summary.csv").exists():
+        if results_root and results_root.exists() and (results_root / "Evaluation_Summary.csv").exists():
             print("[4.3 Evaluation] --> Evaluation Summary erstellt")
             
         time.sleep(2)
 
     # ------------------------- Abschlussbericht -------------------------
     print("\nProzesse beendet.")
-    exit_codes = [p_4_1.poll(), p_4_2.poll(), p_4_3.poll()]
+    
+    code_4_1 = p_4_1.poll() if p_4_1 else -1
+    code_4_2 = p_4_2.poll() if p_4_2 else -1
+    code_4_3 = p_4_3.poll() if p_4_3 else -1
+    
+    exit_codes = [c for c in [code_4_1, code_4_2, code_4_3] if c != -1]
+    
+    # Success means all started processes exited with 0, and at least 4.1 ran
+    success = (len(exit_codes) > 0) and all(c == 0 for c in exit_codes)
 
-    if all(c == 0 for c in exit_codes):
+    if success:
         print("\n==================================================")
         print("       PIPELINE 4 SUCCESSFULLY COMPLETED          ")
         print("==================================================")
@@ -182,7 +216,8 @@ def main():
         print("\n==================================================")
         print("       PIPELINE 4 FAILED (See Logs above)         ")
         print("==================================================")
-        print(f"Exit Codes: 4.1={exit_codes[0]}, 4.2={exit_codes[1]}, 4.3={exit_codes[2]}")
+        print(f"Exit Codes: 4.1={code_4_1}, 4.2={code_4_2}, 4.3={code_4_3}")
+        print("Note: -1 bedeutet, dass der Prozess nicht gestartet wurde.")
     
     input("\nDrücke [ENTER] um das Skript zu beenden...")
 

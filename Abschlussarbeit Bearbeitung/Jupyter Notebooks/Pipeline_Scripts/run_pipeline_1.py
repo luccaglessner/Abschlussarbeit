@@ -1,9 +1,11 @@
 import os
 import subprocess
 import sys
-from pathlib import Path
 import time
+
+from pathlib import Path
 from datetime import datetime
+
 
 # ----------------------------------------------- Basisverzeichnis definieren -----------------------------------------------
 BASE_DIR = Path(__file__).parent.parent.resolve()
@@ -51,13 +53,13 @@ def main():
         success = run_notebook(step_1)
         if not success:
             print("Abbruch der Pipeline aufgrund von Fehlern.")
-            input("Taste drücken zum Beenden...")
+            input("Taste [ENTER] drücken zum Beenden...")
             sys.exit(1)
 
     print("\n========================================================")
     print("   Data Acquisition erfolgreich abgeschlossen!")
     print("========================================================")
-    input("Taste drücken zum Schließen...")
+    input("Taste [ENTER] drücken zum Schließen...")
 
 if __name__ == "__main__":
     main()

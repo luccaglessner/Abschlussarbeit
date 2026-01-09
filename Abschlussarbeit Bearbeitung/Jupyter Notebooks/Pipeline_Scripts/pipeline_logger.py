@@ -1,27 +1,24 @@
 import os
 import sys
 import traceback
+
 from datetime import datetime
 from pathlib import Path
 
-# ----------------------------------------------- Konfiguration -----------------------------------------------
-# Log to parent directory (Jupyter Notebooks root)
+
+# ------------------------- Konfiguration -------------------------
 LOG_DIR = Path(__file__).parent.parent / "Crash_Reports"
 
 def setup_logging():
-    """Stellt sicher, dass das Protokollverzeichnis existiert."""
+    
+    # ------------------------- Log-Verzeichnis erstellen oder finden -------------------------
     if not LOG_DIR.exists():
         LOG_DIR.mkdir()
 
 def log_error(context, exception=None, stderr=None):
-    """
-    Dokumentiert einen kritischen Fehler in einer separaten Textdatei.
     
-    Parameter:
-    - context (str): Beschreibung des Kontextes (z.B. Dateiname, Schritt).
-    - exception (Exception, optional): Das abgefangene Python-Exception-Objekt.
-    - stderr (str, optional): Standard Error Output eines Subprozesses.
-    """
+
+    # ------------------------- Protokollierung -------------------------
     setup_logging()
     
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -57,4 +54,4 @@ def log_error(context, exception=None, stderr=None):
         f.write("Dieses Dokument dient der technischen Fehleranalyse und Reproduktion.\n")
         f.write("Ende des Protokolls.\n")
         
-    print(f"\n[!] KRITISCHER FEHLER. Details wurden gespeichert in:\n    {filename.resolve()}\n")
+    print(f"\nKritischer Fehler. Details wurden gespeichert in:\n    {filename.resolve()}\n")
