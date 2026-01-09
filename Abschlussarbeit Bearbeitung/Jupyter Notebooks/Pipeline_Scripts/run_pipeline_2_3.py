@@ -3,67 +3,13 @@ import subprocess
 import sys
 from pathlib import Path
 import time
-import signal
-import atexit
 from datetime import datetime
 
 # ----------------------------------------------- Basisverzeichnis -----------------------------------------------
 # Basisverzeichnis ist Elternordner
 BASE_DIR = Path(__file__).parent.parent.resolve()
-LOCK_FILE = Path(__file__).parent / "Pipeline_Locks" / "pipeline_2_3.lock"
 
 import pipeline_logger
-
-def check_and_kill_existing_process():
-
-    # ----------------------------- Check for lock file -----------------------------
-    if LOCK_FILE.exists():
-        try:
-            with open(LOCK_FILE, 'r') as f:
-                old_pid = int(f.read().strip())
-            
-            # ----------------------------- Check if process exists -----------------------------
-            try:
-                os.kill(old_pid, 0) 
-                print(f"WARNUNG: Laufende Pipeline-Instanz (2 & 3) gefunden (PID: {old_pid}). Beende Prozess...")
-                
-                os.kill(old_pid, signal.SIGTERM)
-                time.sleep(1)
-                
-                try:
-                    os.kill(old_pid, 0)
-                    print(f"Instanz (PID: {old_pid}) reagiert nicht. Erzwinge Beendigung (SIGKILL)...")
-                    os.kill(old_pid, signal.SIGTERM) 
-                except OSError:
-                    pass 
-                
-                print(f"Vorherige Instanz (PID: {old_pid}) erfolgreich beendet.")
-                
-            except OSError:
-                print(f"Stale Lock-File gefunden (Prozess {old_pid} existiert nicht mehr). Bereinige...")
-        
-        except ValueError:
-             print("Beschädigtes Lock-File gefunden. Bereinige...")
-        except Exception as e:
-            print(f"Fehler beim Prüfen der vorherigen Instanz: {e}")
-        
-        if LOCK_FILE.exists():
-            LOCK_FILE.unlink()
-
-def register_current_process():
-    pid = os.getpid()
-    with open(LOCK_FILE, 'w') as f:
-        f.write(str(pid))
-
-def cleanup_lock():
-    if LOCK_FILE.exists():
-        try:
-            with open(LOCK_FILE, 'r') as f:
-                pid = int(f.read().strip())
-            if pid == os.getpid():
-                LOCK_FILE.unlink()
-        except:
-            pass 
 
 def run_notebook(notebook_path):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Starte: {notebook_path.name}")
@@ -89,15 +35,8 @@ def run_notebook(notebook_path):
         return False
 
 def main():
-    # ----------------------------- Singleton Logic -----------------------------
-    check_and_kill_existing_process()
-    register_current_process()
-    atexit.register(cleanup_lock)
-    # ---------------------------------------------------------------------------
-
     print("=== Pipeline 2 & 3: Analytik & Standard Machine Learning ===")
     print(f"Process ID: {os.getpid()}")
-    
     # ----------------------------- Interaktive Abfrage: Modus für SOM -----------------------------
     print("\n[KONFIGURATION] Bitte wähle den Ausführungsmodus für Machine Learning (Schritt 3.2):")
     print("  1) MANUAL (Standard: Konfiguration im Notebook)")
