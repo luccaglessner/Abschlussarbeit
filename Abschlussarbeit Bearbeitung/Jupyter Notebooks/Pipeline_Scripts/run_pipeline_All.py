@@ -20,10 +20,10 @@ def run_script(script_name):
         
     try:
         start_time = time.time()
-        # Use sys.executable to ensure we use the same python interpreter
+        # ----------------------------- sys.executable um gleiche nInterpreter sicherzustellen -----------------------------
         cmd = [sys.executable, "-u", str(script_path)]
         
-        # Run subprocess and stream output
+        # ----------------------------- Unterprozess ausführen und Ausgabe -----------------------------
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
@@ -33,28 +33,44 @@ def run_script(script_name):
             cwd=BASE_DIR
         )
         
-        # Print output in real-time
+        # ----------------------------- Echtzeit-Ausgabe -----------------------------
         for line in process.stdout:
             print(line, end='')
             
         process.wait()
         
         if process.returncode != 0:
-            print(f"\n!!! Sub-Pipeline {script_name} fehlgeschlagen (Exit Code: {process.returncode}) !!!")
+            print(f"\nSub-Pipeline {script_name} fehlgeschlagen (Exit Code: {process.returncode}) !!!")
             return False
             
-        print(f"\n-> Sub-Pipeline {script_name} erfolgreich in {time.time() - start_time:.2f}s")
+        print(f"\nSub-Pipeline {script_name} erfolgreich in {time.time() - start_time:.2f}s")
         return True
         
     except Exception as e:
-        print(f"\nUNERWARTETER FEHLER beim Starten von {script_name}: {e}")
+        print(f"\nFehler beim Starten von {script_name}: {e}")
         return False
 
 def main():
-    print(f"Starting FULL PIPELINE Execution at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Komplette Pipeline starten:{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Process ID: {os.getpid()}")
+
+    # ----------------------------- Interaktive Abfrage: Modus für SOM -----------------------------
+    print("\n[KONFIGURATION] Bitte wähle den Ausführungsmodus für Machine Learning (Schritt 3.2):")
+    print("  1) MANUAL (Standard: Konfiguration im Notebook)")
+    print("  2) AUTO / LOOP (Automatische Kombinationstestung)")
+    choice = input("Deine Wahl (1/2): ").strip()
+    
+    if choice == '2':
+        os.environ['SOM_MODE'] = 'LOOP'
+        print(">> Modus gesetzt: LOOP (Auto)\n")
+    else:
+        # Default fallback
+        os.environ['SOM_MODE'] = 'MANUAL' 
+        print(">> Modus gesetzt: MANUAL\n")
+
     start_total = time.time()
     
+    # ----------------------------- Pipelines starten -----------------------------
     pipelines = [
         "run_pipeline_1.py",
         "run_pipeline_2_3.py",
@@ -66,7 +82,7 @@ def main():
         success = run_script(pipe)
         if not success:
             print(f"\n{'-'*60}")
-            print(f"CRITICAL: Pipeline stopped due to error in {pipe}")
+            print(f"CRITICAL: Pipeline gestoppt aufgrund von Fehler in {pipe}")
             print(f"{'-'*60}")
             sys.exit(1)
             
