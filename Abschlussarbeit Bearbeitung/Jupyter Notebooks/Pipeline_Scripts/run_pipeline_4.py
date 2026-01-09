@@ -123,7 +123,7 @@ def main():
     while active_model_dir is None:
         active_model_dir = get_latest_model_dir()
         if active_model_dir:
-            print(f"Aktiven Ordner gefunden: {active_model_dir.name}")
+            print(f"Aktiven Ordner gefunden: {active_model_dir.name}. Erste Erstellung kann bis zu 10 Minuten dauern.")
             break
         
         # ----------------------------- Prüfen ob Training beendet ist -----------------------------
