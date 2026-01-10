@@ -3,8 +3,11 @@ Ausführungsreihenfolge der Jupyter Notebooks
 
 Dieses Dokument beschreibt die empfohlene Reihenfolge der Ausführung aller Jupyter Notebooks in diesem Projekt. Diese Reihenfolge stellt sicher, dass alle benötigten Input-Dateien für nachfolgende Notebooks korrekt generiert wurden.
 
--> run_pipeline_Data-Acquisition-Wrapper.py [1. Pipeline zum Ausführen]
--> run_pipeline_Analysis-and-Learning.py [2. Pipeline zum Ausführen]
+Automatisierte Pipelines (in `Jupyter Notebooks/Pipeline_Scripts/`):
+-> run_pipeline_1.py   [Führt Schritt 1: Akquise aus]
+-> run_pipeline_2_3.py [Führt Schritt 2 & 3: Analyse & Machine Learning aus]
+-> run_pipeline_4.py   [Führt Schritt 4: Imputation (Training -> Inferenz -> Evaluation) aus]
+-> run_pipeline_All.py [Führt ALLE Pipelines sequenziell aus]
 
 --------------------------------------------------------------------------------------------------
 0. 0_Überprüfung_geeigneter_Datenbanken
@@ -44,43 +47,60 @@ Dieses Dokument beschreibt die empfohlene Reihenfolge der Ausführung aller Jupy
    - Zweck: Analyse der Temperaturverteilungen.
 
 5. 2_Analysis/2.4_Data-Quality_Ionic-Balance-Error
-   - Pfand: `2_Analysis/2.4_Data-Quality_Ionic-Balance-Error/...`
+   - Pfad: `2_Analysis/2.4_Data-Quality_Ionic-Balance-Error/...`
    - Zweck: Analyse des Ionenbilanzfehlers.
-   - Varianten: Es gibt Unterordner für verschiedene Ionen-Sets (`Global_scheme_ions` etc.).
    - Ablauf innerhalb der Ordner:
-     a. `1.1_Data-Quality_Raw_Data.ipynb` (Analysiert Rohdaten)
-     b. `1.2_Data-Quality_Adjusted_Data.ipynb` (Analysiert angepasste Daten aus 1.1)
+     a. `1.1_Data-Quality_Raw_Data.ipynb`
+     b. `1.2_Data-Quality_Adjusted_Data.ipynb`
 
 --------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
-3. Machine Learning Pipeline
+3. Machine Learning Pipeline (Cluster-Analysen)
 --------------------------------------------------------------------------------------------------
 
 6. 3_Machine-Learning/3.1_Preprocessing (HAUPTVORAUSSETZUNG FÜR ML)
    - Pfad: `3_Machine-Learning/3.1_Preprocessing/Preprocessing.ipynb`
-   - Zweck: Bereitet die Daten für das Machine Learning vor. Führt Log-Transformation und Gaussian-Scaling durch.
-   - Input: Liest `Komplette_Datenbank.csv` (Output von 1.1).
+   - Zweck: Bereitet die Daten für das Machine Learning vor (Log-Transformation, Scaling).
+   - Input: Liest `Komplette_Datenbank.csv`.
    - Output: Erzeugt `Preprocessing/.../Preprocessed_SOM_Ready.csv`.
 
 7. 3_Machine-Learning/3.2_Machine-Learning
    - Pfad: `3_Machine-Learning/3.2_Machine-Learning/MiniSom/MiniSom_Machine-Learning.ipynb`
    - Pfad: `3_Machine-Learning/3.2_Machine-Learning/IntraSom/IntraSom_Machine-Learning.ipynb`
    - Zweck: Trainiert Self-Organizing Maps (SOM) zur Cluster-Analyse.
-   - Input: Liest `Preprocessed_SOM_Ready.csv` (Output von 3.1).
-   - Ausführung: Beide Notebooks sind unabhängig voneinander ausführbar, benötigen aber den Output von 3.1.
+   - Input: Liest `Preprocessed_SOM_Ready.csv`.
 
-Zusammenfassung der Kette:
-1.1 -> 1.2 -> 2.x Analysen
-1.1 -> 3.1 -> 3.2 (ML) -> 4.x Synthetische Daten
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+4. Imputation (VAE)
+--------------------------------------------------------------------------------------------------
+
+8. 4_Imputation/4.1_VAE_Imputation
+   - Pfad: `4_Imputation/4.1_VAE_Imputation/VAE_Imputation.ipynb`
+   - Zweck: Trainiert das Variational Autoencoder (VAE) Modell.
+   - Output: Speichert trainierte Modelle.
+
+9. 4_Imputation/4.2_Inference
+   - Pfad: `4_Imputation/4.2_Inference/Inference.ipynb`
+   - Zweck: Nutzt das trainierte VAE-Modell zur Imputation fehlender Werte in den Daten.
+   - Output: Generiert Imputations-Ergebnisse.
+
+10. 4_Imputation/4.3_Evaluation
+    - Pfad: `4_Imputation/4.3_Evaluation/Evaluation.ipynb`
+    - Zweck: Erstellt Berichte und Diagramme zur Qualität der Imputation.
+    - Output: `Evaluation_Report.pdf`.
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+5. Synthetische Daten
+--------------------------------------------------------------------------------------------------
+
+11. 5_Synthetic-Data/5.1_Synthetic_Data_Generation
+    - Pfad: `5_Synthetic-Data/5.1_Synthetic_Data_Generation/Synthetic_Data_Generation.ipynb`
+    - Zweck: Erzeugung synthetischer Daten (Zukünftige Implementierung / in Arbeit).
 
 -------------------
 
-[WERDEN IGNORIERT] Gesteinstypen werden anderweitig ergänzt
-
- 1_Acquisition/1.2_Rock-Type-Mapping 
-
-
- 2_Analysis/2.2_Rock-Type_Analysis
-   - Pfad: `2_Analysis/2.2_Rock-Type_Analysis/Rock-Type_Analyzer.ipynb`
-   - Zweck: Vergleicht die Datenqualität und -verteilung vor und nach dem Rock-Type Mapping.
-   - Abhängigkeit: Benötigt Outputs von 1.1 UND 1.2.
+[WERDEN IGNORIERT]
+- 1_Acquisition/1.2_Rock-Type-Mapping
+- 2_Analysis/2.2_Rock-Type_Analysis (Teilweise obsolet)
