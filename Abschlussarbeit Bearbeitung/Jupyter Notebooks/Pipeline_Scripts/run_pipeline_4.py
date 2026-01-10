@@ -153,11 +153,14 @@ def main():
     # ------------------------- Fortschrittsanzeige -------------------------
     known_models = set()
     known_results = set()
+    known_pdfs = set()
     
     # ----------------------------- Ergebnisordner für 4.2 definieren falls noch nicht geschehen -----------------------------
     results_root = None
+    eval_results_dir = None
     if active_model_dir:
          results_root = NOTEBOOK_4_2.parent / "Imputation_Results" / active_model_dir.name
+         eval_results_dir = NOTEBOOK_4_3.parent / "Evaluation_Results" / active_model_dir.name
 
     while True:
         # ----------------------------- Prüfen ob Prozesse beendet sind -----------------------------
@@ -189,6 +192,14 @@ def main():
             for r in sorted(new_results):
                 print(f"[4.2 Inference] --> {r} erstellt")
                 known_results.add(r)
+        
+        # ----------------------------- Prüfen ob Evaluation PDFs generiert sind -----------------------------
+        if eval_results_dir and eval_results_dir.exists():
+            current_pdfs = set(f.name for f in eval_results_dir.glob("Analysis_Run_*.pdf"))
+            new_pdfs = current_pdfs - known_pdfs
+            for p in sorted(new_pdfs):
+                 print(f"[4.3 Evaluation] --> {p} erstellt")
+                 known_pdfs.add(p)
                 
         # ----------------------------- Prüfen ob Evaluation Summary generiert ist -----------------------------
         if results_root and results_root.exists() and (results_root / "Evaluation_Summary.csv").exists():
