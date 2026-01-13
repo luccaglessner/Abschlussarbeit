@@ -1,16 +1,21 @@
 SOM
+-> Finale Seite mit Trendlinien aller Cluster zu chemischen Elementen
+-> 
 
--> Darstellung für Chemie hinzufügen
--> Nummerierung der Cluster auf Map
--> x Cluster = x Seiten mit vollständiger Analyse je Cluster (Temperatur, Rock Type, Chemie, ….)
--> Abschlussseite (Test mit x Clustern in einem Plot) -> bspw. mit Annäherungskurve in verschiedenen Farben [/angenäherte Dichteverteilungsfunktion]
+--------------------
 
---------------------------------
+Basis:
+Report_001_Base_Only_Na-Mg-Ca-Cl-SO4-HCO3
 
-Imputation
+pH-Basis:
+Report_003_Plus_pH_Na-Mg-Ca-Cl-SO4-HCO3-pH
 
--> unüberwachtes Lernen auf vollständigen Datenzeilen [für ausgewählte Tupel (überprüfen was übrig bleibt)]
--> Lernen der Verteilung (welches Modell verwenden (?))
+Zusatz:
+Report_017_Plus_pH-Fe_Na-Mg-Ca-Cl-SO4-HCO3-pH-Fe
+Report_025_Plus_pH-K-Fe_Na-Mg-Ca-Cl-SO4-HCO3-pH-K-Fe
 
--> In einem Inferenzskript dann:
--> Lernen -> Erstmal ein Attribut weglassen -> Imputation -> mit "echten" Werten vergleichen
+--------------------
+--------------------
+
+Variational Autoencoder
+-> Fehlerminimierung
