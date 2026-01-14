@@ -135,8 +135,6 @@ def main():
                  print("Ergebnis-Ordner wurde erstellt.")
                  results_created = True
                  break
-             # Debug output occasionally
-             # print(f"Check: {results_root} exists={results_root.exists()}")
              time.sleep(2)
              
         if results_created:
@@ -218,7 +216,7 @@ def main():
     
     exit_codes = [c for c in [code_4_1, code_4_2, code_4_3] if c != -1]
     
-    # Success means all started processes exited with 0, and at least 4.1 ran
+
     success = (len(exit_codes) > 0) and all(c == 0 for c in exit_codes)
 
     if success:
