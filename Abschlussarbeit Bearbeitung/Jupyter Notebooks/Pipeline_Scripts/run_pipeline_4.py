@@ -91,7 +91,7 @@ def main():
 
     # ----------------------------- Start Training -----------------------------
     print(f"\n[1/3] Starte 4.1 für Training:")
-    cmd_4_1 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_1)]
+    cmd_4_1 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", "--ExecutePreprocessor.timeout=-1", str(NOTEBOOK_4_1)]
     p_4_1 = subprocess.Popen(cmd_4_1, cwd=NOTEBOOK_4_1.parent)
     procs.append(("4.1 Training", p_4_1))
     
@@ -117,13 +117,13 @@ def main():
     if active_model_dir:
         # ----------------------------- Inferenzskript starten -----------------------------
         print(f"\n[2/3] Starte 4.2 für Inferenzskript:")
-        cmd_4_2 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_2)]
+        cmd_4_2 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", "--ExecutePreprocessor.timeout=-1", str(NOTEBOOK_4_2)]
         p_4_2 = subprocess.Popen(cmd_4_2, cwd=NOTEBOOK_4_2.parent)
         procs.append(("4.2 Inference", p_4_2))
         
-        # ----------------------------- Warten auf Ergebnis-Ordner -----------------------------
-        results_root = NOTEBOOK_4_2.parent / "Imputation_Results" / active_model_dir.name
+        results_root = NOTEBOOK_4_2.parent / "Inference_Results" / active_model_dir.name
         print(f"Warte auf Ergebnis-Ordner: {results_root.name}...")
+        print(f"Pfad erwartet: {results_root}")
         
         results_created = False
         while not results_created:
@@ -135,12 +135,14 @@ def main():
                  print("Ergebnis-Ordner wurde erstellt.")
                  results_created = True
                  break
+             # Debug output occasionally
+             # print(f"Check: {results_root} exists={results_root.exists()}")
              time.sleep(2)
              
         if results_created:
             # ----------------------------- Auswertung starten -----------------------------
             print(f"\n[3/3] Starte 4.3 für Auswertung:")
-            cmd_4_3 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", str(NOTEBOOK_4_3)]
+            cmd_4_3 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", "--ExecutePreprocessor.timeout=-1", str(NOTEBOOK_4_3)]
             p_4_3 = subprocess.Popen(cmd_4_3, cwd=NOTEBOOK_4_3.parent)
             procs.append(("4.3 Evaluation", p_4_3))
 
@@ -159,7 +161,7 @@ def main():
     results_root = None
     eval_results_dir = None
     if active_model_dir:
-         results_root = NOTEBOOK_4_2.parent / "Imputation_Results" / active_model_dir.name
+         results_root = NOTEBOOK_4_2.parent / "Inference_Results" / active_model_dir.name
          eval_results_dir = NOTEBOOK_4_3.parent / "Evaluation_Results" / active_model_dir.name
 
     while True:
@@ -202,7 +204,7 @@ def main():
                  known_pdfs.add(p)
                 
         # ----------------------------- Prüfen ob Evaluation Summary generiert ist -----------------------------
-        if results_root and results_root.exists() and (results_root / "Evaluation_Summary.csv").exists():
+        if eval_results_dir and eval_results_dir.exists() and (eval_results_dir / "Summary_Evaluation.csv").exists():
             print("[4.3 Evaluation] --> Evaluation Summary erstellt")
             
         time.sleep(2)
