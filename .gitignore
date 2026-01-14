@@ -17,6 +17,7 @@ MiniSom_Results/
 IntraSom_Results/
 Imputation_Results/
 Evaluation_Results/
+inference_results/
 **/Preprocessing/
 
 # Generated Reports
