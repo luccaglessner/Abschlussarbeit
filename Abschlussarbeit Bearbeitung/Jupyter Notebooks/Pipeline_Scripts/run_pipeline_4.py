@@ -90,9 +90,44 @@ def main():
         return None
 
     # ----------------------------- Start Training -----------------------------
-    print(f"\n[1/3] Starte 4.1 für Training:")
-    cmd_4_1 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", "--ExecutePreprocessor.timeout=-1", str(NOTEBOOK_4_1)]
-    p_4_1 = subprocess.Popen(cmd_4_1, cwd=NOTEBOOK_4_1.parent)
+    # ----------------------------- Start Training -----------------------------
+    # ----------------------------- Start Training -----------------------------
+    print(f"\n[1/3] Starte 4.1 für Training (Direct Stream):")
+    
+    # 1. Convert Notebook to Python code in memory
+    print("  -> Lade Code aus Notebook...")
+    convert_cmd = ["jupyter", "nbconvert", "--to", "python", "--stdout", str(NOTEBOOK_4_1)]
+    # Use utf-8 and ignore errors to be safe
+    python_code = subprocess.check_output(convert_cmd, cwd=NOTEBOOK_4_1.parent).decode('utf-8', errors='ignore')
+    
+    # 2. Filter out magics (get_ipython) to allow pure python execution
+    filtered_code_lines = []
+    for line in python_code.splitlines():
+        if "get_ipython()" in line:
+            filtered_code_lines.append(f"# {line}  # Filtered Magic")
+        else:
+            filtered_code_lines.append(line)
+    
+    final_code = "\n".join(filtered_code_lines)
+    
+    print(f"  -> Starte Python-Prozess (Live Output)...")
+    
+    # 3. Create temporary python file to allow multiprocessing (Windows spawn fix)
+    temp_script_path = NOTEBOOK_4_1.parent / "VAE_Imputation_Job.py"
+    with open(temp_script_path, "w", encoding="utf-8") as f:
+        f.write(final_code)
+        
+    # 4. Execute the temporary file
+    # -u = unbuffered output
+    cmd_4_1 = ["python", "-u", str(temp_script_path)]
+    
+    # Explicitly use utf-8 encoding
+    p_4_1 = subprocess.Popen(cmd_4_1, cwd=NOTEBOOK_4_1.parent, text=True, encoding='utf-8')
+    
+    # No need to write to stdin anymore
+    # p_4_1.stdin.write(final_code)
+    # p_4_1.stdin.close()
+    
     procs.append(("4.1 Training", p_4_1))
     
     # ----------------------------- Warten auf Modell-Ordner -----------------------------
