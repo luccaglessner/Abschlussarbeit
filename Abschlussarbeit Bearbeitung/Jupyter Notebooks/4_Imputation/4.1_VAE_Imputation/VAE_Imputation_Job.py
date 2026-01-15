@@ -123,8 +123,8 @@ OPTIONAL_FEATURES_POOL = [
 
 # ------------------------- Hyperparameter -------------------------
 MAX_ITERATIONS = 30
-BATCH_SIZE = 64
-EPOCHS = 1000
+BATCH_SIZE = 256
+EPOCHS = 150
 KLD_WARMUP_EPOCHS = 50
 
 # ------------------------- Variablen -------------------------
@@ -421,6 +421,7 @@ if __name__ == "__main__":
             input_dim = len(train_cols)
             vae_cv = VAE(input_dim=input_dim, latent_dim=LATENT_DIM, hidden_dim=HIDDEN_DIM).to(device)
             opt_cv = optim.Adam(vae_cv.parameters(), lr=1e-3)
+            scaler_amp = torch.cuda.amp.GradScaler(enabled=(device.type == 'cuda')) # AMP Scaler
             
             # ------------------------- Training -------------------------
             vae_cv.train()
@@ -434,18 +435,27 @@ if __name__ == "__main__":
                 for batch in fold_loader:
                     x_batch = batch[0].to(device)
                     opt_cv.zero_grad()
-                    recon_x, mu, logvar = vae_cv(x_batch)
-                    loss = loss_function(recon_x, x_batch, mu, logvar, beta=current_beta)
-                    loss.backward()
-                    opt_cv.step()
+                    
+                    # AMP Context
+                    with torch.cuda.amp.autocast(enabled=(device.type == 'cuda')):
+                        recon_x, mu, logvar = vae_cv(x_batch)
+                        loss = loss_function(recon_x, x_batch, mu, logvar, beta=current_beta)
+                    
+                    scaler_amp.scale(loss).backward()
+                    scaler_amp.step(opt_cv)
+                    scaler_amp.update()
             
             # ------------------------- Validierung -------------------------
             vae_cv.eval()
             with torch.no_grad():
                 x_val = torch.from_numpy(X_fold_val).float().to(device)
-                r_val, m_val, l_val = vae_cv(x_val)
-                # ------------------------- CV Loss -------------------------
-                val_loss = loss_function(r_val, x_val, m_val, l_val, beta=KLD_WEIGHT).item() / len(x_val)
+                
+                # AMP Context für Val
+                with torch.cuda.amp.autocast(enabled=(device.type == 'cuda')):
+                    r_val, m_val, l_val = vae_cv(x_val)
+                    # ------------------------- CV Loss -------------------------
+                    val_loss = loss_function(r_val, x_val, m_val, l_val, beta=KLD_WEIGHT).item() / len(x_val)
+                
                 cv_scores.append(val_loss)
                 
         avg_cv_loss = np.mean(cv_scores)
@@ -467,7 +477,7 @@ if __name__ == "__main__":
         input_dim = len(train_cols)
         vae = VAE(input_dim=input_dim, latent_dim=LATENT_DIM, hidden_dim=HIDDEN_DIM).to(device)
         optimizer = optim.Adam(vae.parameters(), lr=1e-3)
-        
+        scaler_amp = torch.cuda.amp.GradScaler(enabled=(device.type == 'cuda')) # AMP Scaler
     
         # ------------------------- Training -------------------------
         vae.train()
@@ -483,10 +493,15 @@ if __name__ == "__main__":
             for batch in train_loader:
                 x_batch = batch[0].to(device)
                 optimizer.zero_grad()
-                recon_x, mu, logvar = vae(x_batch)
-                loss = loss_function(recon_x, x_batch, mu, logvar, beta=current_beta)
-                loss.backward()
-                optimizer.step()
+                
+                with torch.cuda.amp.autocast(enabled=(device.type == 'cuda')):
+                    recon_x, mu, logvar = vae(x_batch)
+                    loss = loss_function(recon_x, x_batch, mu, logvar, beta=current_beta)
+                
+                scaler_amp.scale(loss).backward()
+                scaler_amp.step(optimizer)
+                scaler_amp.update()
+                
                 epoch_loss += loss.item()
             
             if (epoch + 1) % 50 == 0:
@@ -533,6 +548,9 @@ if __name__ == "__main__":
         history_log.append(metadata)
     
     print("\nTraining beendet")
+
+
+# In[8]:
 
 
 # In[8]:

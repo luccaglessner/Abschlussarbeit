@@ -114,8 +114,34 @@ def main():
     
     # 3. Create temporary python file to allow multiprocessing (Windows spawn fix)
     temp_script_path = NOTEBOOK_4_1.parent / "VAE_Imputation_Job.py"
-    with open(temp_script_path, "w", encoding="utf-8") as f:
-        f.write(final_code)
+    
+    # ----------------------------- Cleanup Handler Vorbereiten -----------------------------
+    import atexit
+    import signal
+    
+    def cleanup():
+        if temp_script_path.exists():
+            try:
+                os.remove(temp_script_path)
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Temporäre Datei gelöscht: {temp_script_path.name}")
+            except Exception as e:
+                print(f"Warnung: Konnte Datei nicht löschen: {e}")
+
+    # Register cleanup for normal exit
+    atexit.register(cleanup)
+    
+    # Register for termination signals
+    def signal_handler(sig, frame):
+        print("\nAbbruch signalisiert! Beende Prozesse...")
+        cleanup()
+        sys.exit(0)
+        
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    try:
+        with open(temp_script_path, "w", encoding="utf-8") as f:
+            f.write(final_code)
         
     # 4. Execute the temporary file
     # -u = unbuffered output
@@ -254,6 +280,17 @@ def main():
 
     success = (len(exit_codes) > 0) and all(c == 0 for c in exit_codes)
 
+    except Exception as e:
+        print(f"\nFATAL ERROR in Pipeline: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        # Doppelter Boden: Falls atexit nicht greift
+        if 'temp_script_path' in locals() and temp_script_path.exists():
+             try:
+                os.remove(temp_script_path)
+             except: pass
+             
     if success:
         print("\n==================================================")
         print("       PIPELINE 4 SUCCESSFULLY COMPLETED          ")
