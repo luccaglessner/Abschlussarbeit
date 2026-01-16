@@ -1,4 +1,24 @@
 #!/usr/bin/env python
+# coding: utf-8
+
+# # 4.1 VAE Imputation: Training
+# 
+# <div class="alert alert-info">
+# 
+# <strong>Ziel</strong><br>
+# Training von Variational Autoencoders (VAE) auf <strong>vollständigen Datenzeilen</strong>.
+# 
+# Es werden wie bereits zuvor in 3.2 verschiedene Feature-Kombinationen durchiteriert
+# <br><br>
+# <strong>Vorgehen</strong>
+# <ol>
+#     <li><strong>Daten laden</strong>: Aus dem neuesten Preprocessing-Ordner (3.1)</li>
+#     <li><strong>Feature-Auswahl</strong>: Iteration über Basis-Features + Optionale Features (bis zu 30 Kombinationen aktuell, anpassbar)</li>
+#     <li><strong>Filterung</strong>: Nutzung ausschließlich vollständiger Datensätze für die gewählten Spalten</li>
+#     <li><strong>Training</strong>: Ein VAE pro Kombination wird trainiert und gespeichert</li>
+#     <li><strong>Output</strong>: Gespeicherte Modelle im <code>Models/</code> Unterordner für spätere Inferenz (4.2)</li>
+# </ol>
+# </div>
 
 # In[ ]:
 
@@ -82,13 +102,28 @@ OPTIONAL_FEATURES_POOL = [
 ]
 
 
+# <div class="alert alert-info">
+# 
+# <strong>Parameter</strong><br>
+# <br><br>
+# <strong>Erklärung</strong>
+# <ol>
+#     <li><strong>MAX_ITERATIONS</strong>: Anzahl unabhängiger Trainingsläufe, sortiert nach Anzahl' kompletter Datenzeilen</li>
+#     <li><strong>BATCH_SIZE</strong>: Batch-Größe für das Training</li>
+#     <li><strong>EPOCHS</strong>: Anzahl der Training-Epochen pro VAE</li>
+#     <li><strong>LATENT_DIM</strong>: Dimension des latenten Raums</li>
+#     <li><strong>HIDDEN_DIM</strong>: Dimension der versteckten Layer</li>
+#     <li><strong>KLD_WEIGHT</strong>: Gewichtung des KLD-Loss</li>
+# </ol>
+# </div>
+
 # In[ ]:
 
 
 # ------------------------- Hyperparameter -------------------------
 MAX_ITERATIONS = 30
 BATCH_SIZE = 256
-EPOCHS = 150
+EPOCHS = 1000
 KLD_WARMUP_EPOCHS = 50
 
 # ------------------------- Variablen -------------------------
