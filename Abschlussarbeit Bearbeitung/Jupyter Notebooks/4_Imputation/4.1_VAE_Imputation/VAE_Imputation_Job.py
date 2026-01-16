@@ -122,14 +122,14 @@ OPTIONAL_FEATURES_POOL = [
 
 # ------------------------- Hyperparameter -------------------------
 MAX_ITERATIONS = 30
-BATCH_SIZE = 256
-EPOCHS = 1000
+BATCH_SIZE = 128
+EPOCHS = 150
 KLD_WARMUP_EPOCHS = 50
 
 # ------------------------- Variablen -------------------------
-LATENT_DIM = 16
-HIDDEN_DIM = 256
-KLD_WEIGHT = 0.5 
+LATENT_DIM = 6
+HIDDEN_DIM = 128
+KLD_WEIGHT = 0.2
 
 
 # In[4]:
