@@ -24,7 +24,8 @@ def run_notebook(notebook_path):
             str(notebook_path)
         ]
         
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # ------------------------- CWD auf Notebook-Ordner setzen, damit relative Pfade funktionieren -------------------------
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=notebook_path.parent)
         duration = time.time() - start_time
         print(f"  -> Fertig in {duration:.2f}s")
         return True
@@ -59,7 +60,8 @@ def main():
     print("\n========================================================")
     print("   Data Acquisition erfolgreich abgeschlossen!")
     print("========================================================")
-    input("Taste [ENTER] drücken zum Schließen...")
+    if os.environ.get("PIPELINE_BATCH_MODE") != "1":
+        input("Taste [ENTER] drücken zum Schließen...")
 
 if __name__ == "__main__":
     main()

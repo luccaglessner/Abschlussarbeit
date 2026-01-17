@@ -20,7 +20,7 @@ def run_script(script_name):
         
     try:
         start_time = time.time()
-        # ----------------------------- sys.executable um gleiche nInterpreter sicherzustellen -----------------------------
+        # ----------------------------- sys.executable um gleichen Interpreter sicherzustellen -----------------------------
         cmd = [sys.executable, "-u", str(script_path)]
         
         # ----------------------------- Unterprozess ausführen und Ausgabe -----------------------------
@@ -30,7 +30,8 @@ def run_script(script_name):
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
-            cwd=BASE_DIR
+            cwd=BASE_DIR,
+            env=os.environ.copy()
         )
         
         # ----------------------------- Echtzeit-Ausgabe -----------------------------
@@ -51,31 +52,58 @@ def run_script(script_name):
         return False
 
 def main():
-    print(f"Komplette Pipeline starten:{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Komplette Pipeline starten: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Process ID: {os.getpid()}")
+    print("-" * 60)
 
-    # ----------------------------- Interaktive Abfrage: Modus für SOM -----------------------------
-    print("\n[KONFIGURATION] Bitte wähle den Ausführungsmodus für Machine Learning (Schritt 3.2):")
-    print("  1) MANUAL (Standard: Konfiguration im Notebook)")
-    print("  2) AUTO / LOOP (Automatische Kombinationstestung)")
-    choice = input("Deine Wahl (1/2): ").strip()
+    # ----------------------------- Global Batch Mode -----------------------------
+    os.environ['PIPELINE_BATCH_MODE'] = '1'
+
+    # ----------------------------- Abhängigkeiten überprüfen -----------------------------
+    dep_script = "../0_Preperation/0.2_Imports-and-Dependencies/install_dependencies.py"
+    print("\n[DEPENDENCY CHECK] Überprüfe Abhängigkeiten...")
+    if not run_script(dep_script):
+        print("WARNUNG: Dependency-Check konnte nicht ausgeführt oder abgeschlossen werden.")
+
+    # ----------------------------- Abfrage zu Timestamp Bereinigung -----------------------------
+    print("\n[KONFIGURATION] Möchtest du die Timestamp-Ordner bereinigen?")
+    clean_choice = input("Deine Wahl (j/n): ").strip().lower()
     
-    if choice == '2':
-        os.environ['SOM_MODE'] = 'LOOP'
-        print(">> Modus gesetzt: LOOP (Auto)\n")
+    if clean_choice in ['j', 'ja', 'y', 'yes']:
+        os.environ['TIMESTAMP_CLEANUP_CONFIRMED'] = '1'
+        run_cleanup = True
+        print(">> Bereinigung aktiviert.")
     else:
-        # Default fallback
-        os.environ['SOM_MODE'] = 'MANUAL' 
-        print(">> Modus gesetzt: MANUAL\n")
+        run_cleanup = False
+        print(">> Bereinigung übersprungen.")
+
+    # ----------------------------- Abfrage zu LOOP Modus -----------------------------
+    print("\n[KONFIGURATION] Soll Pipeline 3 (Machine Learning) im LOOP-Modus ausgeführt werden?")
+    loop_choice = input("Deine Wahl (j/n für LOOP/AUTO, sonst MANUAL): ").strip().lower()
+    
+    if loop_choice in ['j', 'ja', 'y', 'yes', 'loop']:
+        os.environ['SOM_MODE'] = 'LOOP'
+        os.environ['SOM_LOOP_LIMIT'] = '50'
+        print(">> Modus gesetzt: LOOP (Auto) - Limit: 50 Durchläufe")
+    else:
+        os.environ['SOM_MODE'] = 'MANUAL'
+        print(">> Modus gesetzt: MANUAL")
 
     start_total = time.time()
     
-    # ----------------------------- Pipelines starten -----------------------------
+    # ----------------------------- Ausführung -----------------------------
+
+    # ----------------------------- Cleanup -----------------------------
+    if run_cleanup:
+        if not run_script("clear_timestamp_folders.py"):
+            print("Abbruch wegen Fehler im Cleanup.")
+            sys.exit(1)
+
+    # ----------------------------- Pipelines -----------------------------
     pipelines = [
         "run_pipeline_1.py",
         "run_pipeline_2_3.py",
-        "run_pipeline_4.py",
-        "run_pipeline_5.py"
+        "run_pipeline_4.py"
     ]
     
     for pipe in pipelines:
@@ -90,6 +118,9 @@ def main():
     print(f"GESAMT-PIPELINE ERFOLGREICH ABGESCHLOSSEN")
     print(f"Gesamtdauer: {time.time() - start_total:.2f}s")
     print(f"{'='*60}")
+    
+    # ----------------------------- Am Ende warten -----------------------------
+    input("Drücke [ENTER] um zu beenden...")
 
 if __name__ == "__main__":
     main()

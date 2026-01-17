@@ -8,7 +8,6 @@ from datetime import datetime
 
 
 # ----------------------------------------------- Basisverzeichnis -----------------------------------------------
-# Basisverzeichnis ist Elternordner
 BASE_DIR = Path(__file__).parent.parent.resolve()
 
 import pipeline_logger
@@ -24,7 +23,7 @@ def run_notebook(notebook_path):
         ]
 
         # ----------------------------- Stderr für Logging erfassen -----------------------------
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=notebook_path.parent)
         print(f"  -> Fertig in {time.time() - start_time:.2f}s")
         return True
     except subprocess.CalledProcessError as e:
@@ -40,17 +39,20 @@ def main():
     print("=== Pipeline 2 & 3: Analytik & Standard Machine Learning ===")
     print(f"Process ID: {os.getpid()}")
     # ----------------------------- Interaktive Abfrage: Modus für SOM -----------------------------
-    print("\n[KONFIGURATION] Bitte wähle den Ausführungsmodus für Machine Learning (Schritt 3.2):")
-    print("  1) MANUAL (Standard: Konfiguration im Notebook)")
-    print("  2) AUTO / LOOP (Automatische Kombinationstestung)")
-    choice = input("Deine Wahl (1/2): ").strip()
-    
-    if choice == '2':
-        os.environ['SOM_MODE'] = 'LOOP'
-        print(">> Modus gesetzt: LOOP (Auto)\n")
+    if "SOM_MODE" in os.environ:
+        print(f"\n[KONFIGURATION] SOM_MODE bereits gesetzt auf: {os.environ['SOM_MODE']}")
     else:
-        os.environ['SOM_MODE'] = 'MANUAL'
-        print(">> Modus gesetzt: MANUAL\n")
+        print("\n[KONFIGURATION] Bitte wähle den Ausführungsmodus für Machine Learning (Schritt 3.2):")
+        print("  1) MANUAL (Standard: Konfiguration im Notebook)")
+        print("  2) AUTO / LOOP (Automatische Kombinationstestung)")
+        choice = input("Deine Wahl (1/2): ").strip()
+        
+        if choice == '2':
+            os.environ['SOM_MODE'] = 'LOOP'
+            print(">> Modus gesetzt: LOOP (Auto)\n")
+        else:
+            os.environ['SOM_MODE'] = 'MANUAL'
+            print(">> Modus gesetzt: MANUAL\n")
 
     
     # ----------------------------- 2.1 - 2.3 Explorative Analysen -----------------------------

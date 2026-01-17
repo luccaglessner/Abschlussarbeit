@@ -72,7 +72,13 @@ def clean_timestamp_folders():
 
 
     print("\n")
-    confirm = input("Bestätigte das Löschen der neusten Zeitstempel Ordner aus folgenden Pfaden (ja/nein): ")
+    print("\n")
+    
+    if os.environ.get('TIMESTAMP_CLEANUP_CONFIRMED') == '1':
+        confirm = 'ja'
+        print("Automatische Bestätigung durch PIPELINE-Steuerung.")
+    else:
+        confirm = input("Bestätigte das Löschen der neusten Zeitstempel Ordner aus folgenden Pfaden (ja/nein): ")
     
     if confirm.lower() == 'ja':
         print("\nStarte Bereinigung...\n")

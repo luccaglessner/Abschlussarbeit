@@ -7,9 +7,8 @@ import pipeline_logger
 from pathlib import Path
 from datetime import datetime
 
-
 # ------------------------- Konfiguration -------------------------
-BASE_DIR = Path(r"C:\Users\lucca\OneDrive\SPEICHER\Hochschule\7. Semester\Abschlussarbeit Bearbeitung\Jupyter Notebooks")
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ----------------------------- Pfade zu den Notebooks -----------------------------
 NOTEBOOK_4_1 = BASE_DIR / "4_Imputation" / "4.1_VAE_Imputation" / "VAE_Imputation.ipynb"
@@ -172,8 +171,29 @@ def main():
         if active_model_dir:
             # ----------------------------- Inferenzskript starten -----------------------------
             print(f"\n[2/3] Starte 4.2 für Inferenzskript:")
-            cmd_4_2 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", "--ExecutePreprocessor.timeout=-1", str(NOTEBOOK_4_2)]
-            p_4_2 = subprocess.Popen(cmd_4_2, cwd=NOTEBOOK_4_2.parent)
+
+            # --> KONVERTIERUNG ZU PYTHON SCRIPT (STABILITÄT)
+            print("  -> Lade Code aus Notebook 4.2...")
+            convert_cmd_4_2 = ["jupyter", "nbconvert", "--to", "python", "--stdout", str(NOTEBOOK_4_2)]
+            python_code_4_2 = subprocess.check_output(convert_cmd_4_2, cwd=NOTEBOOK_4_2.parent).decode('utf-8', errors='ignore')
+            
+            # Magics entfernen
+            filtered_code_4_2 = []
+            for line in python_code_4_2.splitlines():
+                if "get_ipython()" in line:
+                    filtered_code_4_2.append(f"# {line}  # Filtered Magic")
+                else:
+                    filtered_code_4_2.append(line)
+            final_code_4_2 = "\n".join(filtered_code_4_2)
+
+            # ----------------------------- Temporäres Skript -----------------------------
+            temp_script_path_4_2 = NOTEBOOK_4_2.parent / "Inference_Job.py"
+            with open(temp_script_path_4_2, "w", encoding="utf-8") as f:
+                f.write(final_code_4_2)
+ 
+            
+            cmd_4_2 = ["python", "-u", str(temp_script_path_4_2)]
+            p_4_2 = subprocess.Popen(cmd_4_2, cwd=NOTEBOOK_4_2.parent, text=True, encoding='utf-8')
             procs.append(("4.2 Inference", p_4_2))
             
             results_root = NOTEBOOK_4_2.parent / "Inference_Results" / active_model_dir.name
@@ -195,8 +215,26 @@ def main():
             if results_created:
                 # ----------------------------- Auswertung starten -----------------------------
                 print(f"\n[3/3] Starte 4.3 für Auswertung:")
-                cmd_4_3 = ["jupyter", "nbconvert", "--to", "notebook", "--execute", "--inplace", "--ExecutePreprocessor.timeout=-1", str(NOTEBOOK_4_3)]
-                p_4_3 = subprocess.Popen(cmd_4_3, cwd=NOTEBOOK_4_3.parent)
+
+                # ----------------------------- Konvertierung zu Python Skript -----------------------------
+                print("  -> Lade Code aus Notebook 4.3...")
+                convert_cmd_4_3 = ["jupyter", "nbconvert", "--to", "python", "--stdout", str(NOTEBOOK_4_3)]
+                python_code_4_3 = subprocess.check_output(convert_cmd_4_3, cwd=NOTEBOOK_4_3.parent).decode('utf-8', errors='ignore')
+
+                filtered_code_4_3 = []
+                for line in python_code_4_3.splitlines():
+                    if "get_ipython()" in line:
+                         filtered_code_4_3.append(f"# {line}  # Filtered Magic")
+                    else:
+                         filtered_code_4_3.append(line)
+                final_code_4_3 = "\n".join(filtered_code_4_3)
+
+                temp_script_path_4_3 = NOTEBOOK_4_3.parent / "Evaluation_Job.py"
+                with open(temp_script_path_4_3, "w", encoding="utf-8") as f:
+                    f.write(final_code_4_3)
+
+                cmd_4_3 = ["python", "-u", str(temp_script_path_4_3)]
+                p_4_3 = subprocess.Popen(cmd_4_3, cwd=NOTEBOOK_4_3.parent, text=True, encoding='utf-8')
                 procs.append(("4.3 Evaluation", p_4_3))
 
         if not p_4_1 and not p_4_2 and not p_4_3: # ------------------------- Fehlerüberprüfung, da Probleme mit Abstürzen -------------------------
@@ -296,7 +334,8 @@ def main():
                 os.remove(temp_script_path)
              except: pass
     
-    input("\nDrücke [ENTER] um das Skript zu beenden...")
+    if os.environ.get("PIPELINE_BATCH_MODE") != "1":
+        input("\nDrücke [ENTER] um das Skript zu beenden...")
 
 if __name__ == "__main__":
     main()
