@@ -39,3 +39,12 @@ Posterpräsentation/
 
 # Manual Results Storage
 Abschlussarbeit Bearbeitung/Jupyter Notebooks/4_Imputation/4.0_Manueller-Ergebnis-Speicher/
+
+# Generated Python Scripts from Notebooks
+*VAE_Imputation*.py
+*Inference*.py
+*Evaluation*.py
+*_Job.py
+
+# Exposé
+*Exposé Praxisprojekt*
