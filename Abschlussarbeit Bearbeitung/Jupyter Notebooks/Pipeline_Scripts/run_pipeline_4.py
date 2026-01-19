@@ -84,7 +84,7 @@ def main():
         # ----------------------------- Höchster Timestamp -----------------------------
         latest = max(subdirs, key=lambda d: d.stat().st_mtime)
         # ----------------------------- Schauen ob es neuste Modifikation ist -----------------------------
-        if latest.stat().st_mtime > start_ts - 60:
+        if latest.stat().st_mtime > start_ts:
             return latest
         return None
 
