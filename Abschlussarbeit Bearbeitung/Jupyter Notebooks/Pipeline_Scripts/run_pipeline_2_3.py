@@ -43,13 +43,17 @@ def main():
         print(f"\n[KONFIGURATION] SOM_MODE bereits gesetzt auf: {os.environ['SOM_MODE']}")
     else:
         print("\n[KONFIGURATION] Bitte wähle den Ausführungsmodus für Machine Learning (Schritt 3.2):")
-        print("  1) MANUAL (Standard: Konfiguration im Notebook)")
+        print("  1) MANUAL (Kombinationen: bis Report_010)")
         print("  2) AUTO / LOOP (Automatische Kombinationstestung)")
-        choice = input("Deine Wahl (1/2): ").strip()
+        print("  3) SIZE_ITERATIONS (2x2 bis 10x10)")
+        choice = input("Deine Wahl (1/2/3): ").strip()
         
         if choice == '2':
             os.environ['SOM_MODE'] = 'LOOP'
             print(">> Modus gesetzt: LOOP (Auto)\n")
+        elif choice == '3':
+            os.environ['SOM_MODE'] = 'SIZE_ITERATIONS'
+            print(">> Modus gesetzt: SIZE_ITERATIONS\n")
         else:
             os.environ['SOM_MODE'] = 'MANUAL'
             print(">> Modus gesetzt: MANUAL\n")
