@@ -64,6 +64,19 @@ def main():
     print("       START PIPELINE 4 (Parallelsierung)      ")
     print("==================================================")
     
+    # ------------------------- Modus Abfrage -------------------------
+    print("\nBitte wählen Sie den Ausführungsmodus:")
+    print("1) MANUAL (Verwendet Einstellungen aus Notebook)")
+    print("2) AUTO (Automatische Parameterwahl)")
+    mode_choice = input("Auswahl (1/2): ").strip()
+    
+    vae_mode = "MANUAL"
+    if mode_choice == "2":
+        vae_mode = "AUTO"
+    
+    os.environ["VAE_MODE"] = vae_mode
+    print(f"Modus gesetzt auf: {vae_mode}")
+    
     # ----------------------------- Checken, ob Notebook existiert -----------------------------
     for name, path in NOTEBOOKS_TO_RUN:
         if not path.exists():
