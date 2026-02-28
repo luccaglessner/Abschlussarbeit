@@ -51,3 +51,10 @@ Abschlussarbeit Bearbeitung/Jupyter Notebooks/4_Imputation/4.0_Manueller-Ergebni
 
 # Thesis components (Latex etc)
 Abschlussarbeit Bearbeitung/Bachelorarbeit Komponenten/
+
+# Pipeline Scripts
+Abschlussarbeit Bearbeitung/Jupyter Notebooks/Pipeline_Scripts/run_pipeline_4_boxplot-generator.py
+Abschlussarbeit Bearbeitung/Jupyter Notebooks/Pipeline_Scripts/run_pipeline_4_imputation_beta.py
+Abschlussarbeit Bearbeitung/Jupyter Notebooks/Pipeline_Scripts/run_pipeline_4_plot_incremental_error.py
+Abschlussarbeit Bearbeitung/Jupyter Notebooks/Pipeline_Scripts/run_pipeline_4-5_Use-timestamp.py
+Abschlussarbeit Bearbeitung/Jupyter Notebooks/Pipeline_Scripts/run_pipeline_count-data.py
