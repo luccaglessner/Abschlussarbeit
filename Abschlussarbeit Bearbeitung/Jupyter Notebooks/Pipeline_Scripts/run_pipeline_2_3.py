@@ -78,12 +78,8 @@ def main():
     # ----------------------------- 2.4 Datenqualität (Unterordner) -----------------------------
     dq_root = BASE_DIR / "2_Analysis/2.4_Data-Quality_Ionic-Balance-Error"
     if dq_root.exists():
-        for sub in dq_root.iterdir():
-            if sub.is_dir():
-                nb_a = sub / "1.1_Data-Quality_Raw_Data.ipynb"
-                nb_b = sub / "1.2_Data-Quality_Adjusted_Data.ipynb"
-                if nb_a.exists(): run_notebook(nb_a)
-                if nb_b.exists(): run_notebook(nb_b)
+        # Die Unterordner (Global_scheme_ions, Main-Ions-Six, etc.) dienen nur der Dokumentation
+        # und generieren PDFs. Sie verändern die Daten nicht und werden ab hier übersprungen.
         
         # ----------------------------- 2.4 Filterungung -----------------------------
         filter_nb = dq_root / "2.4_Filter_Database.ipynb"

@@ -93,7 +93,7 @@ def run_notebook(path, params):
 def generate_comparison_pdf(idx, include_incomplete, v_results_path, k_results_path, vae_idx=None):
     # ------------------------- Erstellt einen Vergleichs-Bericht als PDF -------------------------
     if vae_idx is None: vae_idx = idx
-    output_pdf = BASE_DIR / "Comparison_Reports" / f"Comparison_VAE_vs_kNN_Run_{idx:03d}_{'Incomplete' if include_incomplete else 'Complete'}.pdf"
+    output_pdf = BASE_DIR / "4-5_Comparison" / f"Comparison_VAE_vs_kNN_Run_{idx:03d}_{'Incomplete' if include_incomplete else 'Complete'}.pdf"
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
 
     def load_data(root, pattern, model_tag):

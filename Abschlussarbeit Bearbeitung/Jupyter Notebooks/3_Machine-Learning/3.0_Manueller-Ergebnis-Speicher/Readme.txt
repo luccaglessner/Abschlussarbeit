@@ -1,1 +1,0 @@
-Dieser Ordner dient dazu, Ergebnisse zu speichern, die durch lange Iterationsprozesse eine große Laufzeit haben und ggf. besser hier aufgehoben werden können
