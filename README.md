@@ -36,7 +36,7 @@ Final evaluation using k-Nearest Neighbors (kNN) and other inference models to v
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 The project uses an automated pipeline system located in `Pipeline_Scripts/`.
 
@@ -52,5 +52,3 @@ The project uses an automated pipeline system located in `Pipeline_Scripts/`.
 ## Results
 The pipeline automatically generates detailed PDF reports for each stage, located in their respective `*_Results/` directories. These reports provide visual insights into cluster stability, chemistry profiles, and imputation accuracy.
 
----
-*Created as part of the Bachelor Thesis research by Lucca Glessner.*
