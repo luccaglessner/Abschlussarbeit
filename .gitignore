@@ -1,7 +1,7 @@
 Abschlussarbeit Bearbeitung/Jupyter Notebooks/OLD_Stored/
 
 # Jupyter
-.ipynb_checkpoints/
+**/.ipynb_checkpoints/
 
 # Python
 __pycache__/
