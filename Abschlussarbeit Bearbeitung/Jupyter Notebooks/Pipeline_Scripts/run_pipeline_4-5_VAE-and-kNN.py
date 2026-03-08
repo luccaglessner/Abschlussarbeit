@@ -112,7 +112,6 @@ def generate_comparison_pdf(idx, include_incomplete, v_results_path, k_results_p
             except: pass
         return pd.DataFrame(data)
 
-    # Support both "Model_XXX" and "Run_XXX" prefixes, with or without extra labels
     v_pattern = f"Imputation_Results_*_{vae_idx:03d}*_Level_*.csv"
     df_v = load_data(v_results_path, v_pattern, "VAE")
     df_k = load_data(k_results_path, f"Imputation_Results_kNN_Level_*.csv", "kNN")

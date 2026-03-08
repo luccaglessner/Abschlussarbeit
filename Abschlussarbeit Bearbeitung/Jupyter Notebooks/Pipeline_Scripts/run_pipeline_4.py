@@ -6,6 +6,19 @@ import pipeline_logger
 
 from pathlib import Path
 from datetime import datetime
+import textwrap
+
+def replace_with_indent(code, target, injection):
+    if target not in code: return code
+    lines = code.splitlines()
+    for i, line in enumerate(lines):
+        if target in line:
+            indent = line[:line.find(target)]
+            dedented = textwrap.dedent(injection).strip()
+            indented = textwrap.indent(dedented, indent)
+            lines[i] = line + "\n" + indented
+            break
+    return "\n".join(lines)
 
 # ------------------------- Konfiguration -------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -77,6 +90,19 @@ def main():
     os.environ["VAE_MODE"] = vae_mode
     print(f"Modus gesetzt auf: {vae_mode}")
     
+    # ------------------------- Clipping Abfrage -------------------------
+    print("\nSoll Quantile Clipping (2%) angewendet werden?")
+    print("y) JA (Erzeugt 'geclippte' Darstellung in Plots)")
+    print("n) NEIN (Original-Ausreißer bleiben sichtbar)")
+    clip_choice = input("Auswahl (y/n) [n]: ").strip().lower()
+    
+    vae_clipping = "0"
+    if clip_choice == "y":
+        vae_clipping = "1"
+    
+    os.environ["VAE_CLIPPING"] = vae_clipping
+    print(f"Clipping gesetzt auf: {'AKTIVIERT' if vae_clipping == '1' else 'DEAKTIVIERT'}")
+    
     # ----------------------------- Checken, ob Notebook existiert -----------------------------
     for name, path in NOTEBOOKS_TO_RUN:
         if not path.exists():
@@ -105,16 +131,38 @@ def main():
     print(f"\n[1/3] Starte 4.1 für Training (Direct Stream):")
     
     # ------------------------- Notebook zu Python Code -------------------------
-    print("  -> Lade Code aus Notebook...")
-    convert_cmd = ["jupyter", "nbconvert", "--to", "python", "--stdout", str(NOTEBOOK_4_1)]
-    # ------------------------- Python Code aus Notebook -------------------------
-    python_code = subprocess.check_output(convert_cmd, cwd=NOTEBOOK_4_1.parent).decode('utf-8', errors='ignore')
+    print("  -> Lade Code aus Notebook 4.1...")
+    try:
+        convert_cmd = ["jupyter", "nbconvert", "--to", "python", "--stdout", str(NOTEBOOK_4_1)]
+        python_code = subprocess.check_output(convert_cmd, cwd=NOTEBOOK_4_1.parent).decode('utf-8', errors='ignore')
+    except Exception as e:
+        print(f"Fehler beim Konvertieren von 4.1: {e}")
+        return False
+
+    # ------------------------- DYNAMISCHE PATCHES FÜR CLIPPING (4.1) -------------------------
+    python_code = python_code.replace("QUANTILE_CLIPPING = True", "QUANTILE_CLIPPING = (os.environ.get('VAE_CLIPPING') == '1')")
+    python_code = python_code.replace("QUANTILE_CLIPPING = False", "QUANTILE_CLIPPING = (os.environ.get('VAE_CLIPPING') == '1')")
     
-    # ------------------------- Magics entfernen -------------------------
+    # Meta-Tracking Initialisierung
+    python_code = replace_with_indent(python_code, "# ------------------------- Quantile Clipping -------------------------", 'clipping_meta = {"active": False}')
+    
+    # Erfassen der Grenzen (lower_q und upper_q)
+    bounds_capture = """
+        if QUANTILE_CLIPPING:
+            lower_q_scaled = scaler.transform(lower_q.reshape(1, -1))[0]
+            upper_q_scaled = scaler.transform(upper_q.reshape(1, -1))[0]
+            clipping_meta = {"active": True, "threshold": QUANTILE_THRESHOLD, "lower": lower_q_scaled.tolist(), "upper": upper_q_scaled.tolist()}
+    """
+    python_code = replace_with_indent(python_code, "X_train_scaled = scaler.fit_transform(X_train_raw)", bounds_capture)
+    
+    # In Metadaten-Dictionary injizieren
+    python_code = python_code.replace('"training_loss_history": epoch_loss_history,', '"training_loss_history": epoch_loss_history, "quantile_clipping": clipping_meta,')
+    
+    # ------------------------- Bereinung Code -------------------------
     filtered_code_lines = []
     for line in python_code.splitlines():
         if "get_ipython()" in line:
-            filtered_code_lines.append(f"# {line}  # Filtered Magic")
+            filtered_code_lines.append(f"# {line}  # Bereinigt")
         else:
             filtered_code_lines.append(line)
     
@@ -229,15 +277,55 @@ def main():
                 # ----------------------------- Auswertung starten -----------------------------
                 print(f"\n[3/3] Starte 4.3 für Auswertung:")
 
-                # ----------------------------- Konvertierung zu Python Skript -----------------------------
+                # ------------------------- Notebook zu Python Code -------------------------
                 print("  -> Lade Code aus Notebook 4.3...")
-                convert_cmd_4_3 = ["jupyter", "nbconvert", "--to", "python", "--stdout", str(NOTEBOOK_4_3)]
-                python_code_4_3 = subprocess.check_output(convert_cmd_4_3, cwd=NOTEBOOK_4_3.parent).decode('utf-8', errors='ignore')
+                try:
+                    convert_cmd = ["jupyter", "nbconvert", "--to", "python", "--stdout", str(NOTEBOOK_4_3)]
+                    python_code_4_3 = subprocess.check_output(convert_cmd, cwd=NOTEBOOK_4_3.parent).decode('utf-8', errors='ignore')
+                except Exception as e:
+                    print(f"Fehler beim Konvertieren von 4.3: {e}")
+                    return False
 
+                # ------------------------- DYNAMISCHE PATCHES FÜR CLIPPING (4.3) -------------------------
+                clipping_bounds_logic = """
+                    # --- INJEKTION: GRENZWERTERFASSUNG ---
+                    is_clipped = False
+                    low_val = -1e9; high_val = 1e9 
+                    if "quantile_clipping" in meta and meta["quantile_clipping"].get("active"):
+                        is_clipped = True
+                        q_lower = meta["quantile_clipping"].get("lower")
+                        q_upper = meta["quantile_clipping"].get("upper")
+                        try:
+                            f_idx = list(meta["features_mapped"]).index(feature)
+                            low_val = q_lower[f_idx]
+                            high_val = q_upper[f_idx]
+                        except: is_clipped = False
+                """
+                python_code_4_3 = replace_with_indent(python_code_4_3, "feat_subset = subset[subset['Feature'] == feature]", clipping_bounds_logic)
+                
+                # 2. Add Clipping for Metrics
+                python_code_4_3 = python_code_4_3.replace(
+                    "y_true = feat_subset['Original']", 
+                    "y_true = np.clip(feat_subset['Original'], low_val, high_val) if is_clipped else feat_subset['Original']"
+                ).replace(
+                    "y_pred = feat_subset['Imputed']", 
+                    "y_pred = np.clip(feat_subset['Imputed'], low_val, high_val) if is_clipped else feat_subset['Imputed']"
+                )
+                
+                # 3. Add Clipping for Plots
+                plot_clipping = """
+                    if is_clipped:
+                        subset_plot = subset_plot.copy()
+                        subset_plot['Original'] = np.clip(subset_plot['Original'], low_val, high_val)
+                        subset_plot['Imputed'] = np.clip(subset_plot['Imputed'], low_val, high_val)
+                """
+                python_code_4_3 = replace_with_indent(python_code_4_3, "# ------------------------- Scatter-Plots -------------------------", plot_clipping)
+
+                # Plot-Anpassungen
                 filtered_code_4_3 = []
                 for line in python_code_4_3.splitlines():
                     if "get_ipython()" in line:
-                         filtered_code_4_3.append(f"# {line}  # Filtered Magic")
+                         filtered_code_4_3.append(f"# {line}  # Bereinigt")
                     else:
                          filtered_code_4_3.append(line)
                 final_code_4_3 = "\n".join(filtered_code_4_3)
