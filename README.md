@@ -69,7 +69,7 @@ The project uses an automated pipeline system located in `Pipeline_Scripts/`.
 -   **`run_pipeline_4.py`**: Handles VAE Imputation, Inference and Evaluation.
 
 ### Requirements
--   **Python 3.10.8** (other versions are not tested and may cause compatibility issues)
+-   **Python 3.10.8** or **3.12.10** (tested versions; other versions may cause compatibility issues)
 -   Jupyter Notebook
 -   All required Python packages and their exact versions are listed in `requirements.txt`. Install them using:
     ```bash
