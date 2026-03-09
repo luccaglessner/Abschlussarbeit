@@ -218,23 +218,11 @@ def run_notebook_as_job(name, path, params_dict=None):
     # ------------------------- Logik für Training-Run Selektion (nur für 4.1) -------------------------
     if params_dict and "TARGET_RUN_INDEX" in params_dict and "VAE_Imputation" in str(path):
         indent = "    "
-        target_run_idx = params_dict["TARGET_RUN_INDEX"]
-         
         logic_code = f"\n{indent}# ------------------------- INJIZIERTE LOGIK (FILTERUNG) -------------------------\n"
-        logic_code += f"{indent}target_idx_usr = {target_run_idx}\n"
-        logic_code += f"{indent}real_idx = target_idx_usr\n"
-        logic_code += f"{indent}if real_idx > 0: real_idx += 1 \n"
-        logic_code += f"{indent}if real_idx > 5: real_idx += 1 \n"
-        logic_code += f"{indent}if real_idx < len(sorted_combos):\n"
-        logic_code += f"{indent}    sorted_combos = [sorted_combos[real_idx]]\n"
-        logic_code += f"{indent}    sorted_labels = [sorted_labels[real_idx]]\n"
-        logic_code += f"{indent}else:\n"
-        logic_code += f"{indent}    sorted_combos = [sorted_combos[0]]\n"
-        logic_code += f"{indent}    sorted_labels = [sorted_labels[0]]\n"
          
         loop_line = "for i, combo in enumerate(sorted_combos):"
         if loop_line in final_code:
-            final_code = final_code.replace(loop_line, logic_code + "\n" + indent + loop_line)
+            final_code = final_code.replace(loop_line, logic_code + "\n" + indent + loop_line + f"\n{indent}    if i != TARGET_RUN_INDEX: continue")
 
     temp_script_path = path.parent / f"{path.stem}_Job_Temp.py"
     
@@ -300,13 +288,18 @@ def main():
     os.environ["VAE_CLIPPING"] = vae_clipping
     print(f"Clipping gesetzt auf: {'AKTIVIERT' if vae_clipping == '1' else 'DEAKTIVIERT'}")
     
+    # ------------------------- Berechnung Realer Index (Wegen Trennern) -------------------------
+    real_idx = target_idx
+    if real_idx > 0: real_idx += 1
+    if real_idx > 5: real_idx += 1
+
     # ------------------------- Training (4.1) -------------------------
     start_ts = time.time()
-    success_4_1 = run_notebook_as_job("4.1 VAE Training", NOTEBOOK_4_1, {"TARGET_RUN_INDEX": target_idx, "MAX_ITERATIONS": 1})
+    success_4_1 = run_notebook_as_job("4.1 VAE Training", NOTEBOOK_4_1, {"TARGET_RUN_INDEX": real_idx, "MAX_ITERATIONS": 1})
     
     if not success_4_1:
-        print("Abbruch wegen Fehler in 4.1")
-        return
+         print("Abbruch wegen Fehler in 4.1")
+         return
 
     # ------------------------- Modell finden -------------------------
     models_root = NOTEBOOK_4_1.parent / "Models"
@@ -317,14 +310,14 @@ def main():
     print(f"Aktives Modell-Verzeichnis: {latest_model.name}")
 
     # ------------------------- Inferenz (4.2) -------------------------
-    success_4_2 = run_notebook_as_job("4.2 VAE Inference", NOTEBOOK_4_2, {"TARGET_RUN_INDEX": target_idx, "FORCE_MODEL_FOLDER": latest_model.name})
+    success_4_2 = run_notebook_as_job("4.2 VAE Inference", NOTEBOOK_4_2, {"TARGET_RUN_INDEX": real_idx, "FORCE_MODEL_FOLDER": latest_model.name})
 
     if not success_4_2:
         print("Abbruch wegen Fehler in 4.2")
         return
 
     # ------------------------- Auswertung (4.3) -------------------------
-    success_4_3 = run_notebook_as_job("4.3 VAE Evaluation", NOTEBOOK_4_3)
+    success_4_3 = run_notebook_as_job("4.3 VAE Evaluation", NOTEBOOK_4_3, {"TARGET_RUN_INDEX": real_idx})
     
     if success_4_3:
         print("\n==================================================")

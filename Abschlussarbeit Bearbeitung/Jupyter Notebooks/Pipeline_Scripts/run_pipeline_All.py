@@ -56,18 +56,25 @@ def main():
     print(f"Process ID: {os.getpid()}")
     print("-" * 60)
 
+    # ----------------------------- Auto Mode Check -----------------------------
+    auto_mode = "--auto" in sys.argv
+
     # ----------------------------- Global Batch Mode -----------------------------
     os.environ['PIPELINE_BATCH_MODE'] = '1'
 
-    # ----------------------------- Abhängigkeiten überprüfen -----------------------------
-    dep_script = "../0_Preperation/0.2_Imports-and-Dependencies/install_dependencies.py"
-    print("\n[DEPENDENCY CHECK] Überprüfe Abhängigkeiten...")
-    if not run_script(dep_script):
-        print("WARNUNG: Dependency-Check konnte nicht ausgeführt oder abgeschlossen werden.")
+    # ----------------------------- Daten-Download prüfen -----------------------------
+    download_script = "../0_Preperation/0.2_Imports-and-Dependencies/download_data.py"
+    print("\n[DATA CHECK] Überprüfe / Lade Quelldaten (Google Drive)...")
+    if not run_script(download_script):
+        print("WARNUNG: Daten-Download konnte nicht ausgeführt oder abgeschlossen werden.")
 
     # ----------------------------- Abfrage zu Timestamp Bereinigung -----------------------------
     print("\n[KONFIGURATION] Möchtest du die Timestamp-Ordner bereinigen?")
-    clean_choice = input("Deine Wahl (j/n): ").strip().lower()
+    if auto_mode:
+        clean_choice = 'j'
+        print("Deine Wahl (j/n): j (--auto Modus aktiv)")
+    else:
+        clean_choice = input("Deine Wahl (j/n): ").strip().lower()
     
     if clean_choice in ['j', 'ja', 'y', 'yes']:
         os.environ['TIMESTAMP_CLEANUP_CONFIRMED'] = '1'
@@ -79,7 +86,11 @@ def main():
 
     # ----------------------------- Abfrage zu LOOP Modus -----------------------------
     print("\n[KONFIGURATION] Soll Pipeline 3 (Machine Learning) im LOOP-Modus ausgeführt werden?")
-    loop_choice = input("Deine Wahl (j/n für LOOP/AUTO, sonst MANUAL): ").strip().lower()
+    if auto_mode:
+        loop_choice = 'j'
+        print("Deine Wahl (j/n für LOOP/AUTO, sonst MANUAL): j (--auto Modus aktiv)")
+    else:
+        loop_choice = input("Deine Wahl (j/n für LOOP/AUTO, sonst MANUAL): ").strip().lower()
     
     if loop_choice in ['j', 'ja', 'y', 'yes', 'loop']:
         os.environ['SOM_MODE'] = 'LOOP'
@@ -120,7 +131,8 @@ def main():
     print(f"{'='*60}")
     
     # ----------------------------- Am Ende warten -----------------------------
-    input("Drücke [ENTER] um zu beenden...")
+    if not auto_mode:
+        input("Drücke [ENTER] um zu beenden...")
 
 if __name__ == "__main__":
     main()
