@@ -1,5 +1,8 @@
 # Hydrochemical Data Analysis and Machine Learning Pipeline
 
+> [!NOTE]
+> The Bachelor Thesis was written in German and the project was initiated and continued in a German context. A translation of the entire repository may occur in the future, but was not part of the thesis submission as of March 9, 2026.
+
 This repository contains the complete codebase and research pipeline developed for my Bachelor Thesis. The project focuses on the automated acquisition, analysis, and processing of hydrochemical data using modern Machine Learning techniques like Self-Organizing Maps (SOM) and Variational Autoencoders (VAE).
 
 ## Project Overview
@@ -11,28 +14,41 @@ The core objective is to create a robust workflow for handling large-scale groun
 The project is structured into logical phases, mirroring the research workflow:
 
 ### 1. Data Acquisition (`1_Acquisition`)
-Responsible for harvesting raw data. It includes specialized wrappers and scraping scripts to pull hydrochemical parameters from online databases and official monitoring stations.
+Responsible for harvesting raw data from hydrochemical databases.
+-   **Subdirectories**: `1.1_Data-Acquisition-Wrapper`, `1.2_Pipeline_Wrapper`
+-   **Results**: Raw databases are stored in `1.1_Data-Acquisition-Wrapper/Gesammelte_Datenbanken/`.
+-   **Experimental Feature**: `1.2_Pipeline_Wrapper` contains an experimental tool (`Pipeline_Execution.ipynb`) designed for future publications. It allows users to easily convert their own custom datasets into the project's standardized schema. A first functional version is already implemented and includes its own detailed English [User Guide](Abschlussarbeit%20Bearbeitung/Jupyter%20Notebooks/1_Acquisition/1.2_Pipeline_Wrapper/README.md).
 
 ### 2. Exploratory Data Analysis (`2_Analysis`)
-A deep dive into the dataset. This section covers:
--   **Statistical EDA**: General data distribution and completeness checks.
--   **Domain-Specific Analysis**: Detailed studies on rock-type influence, temperature gradients, and ionic balance errors (IBE).
--   **Data Quality**: Automated filtering and cleaning based on hydrochemical consistency (e.g., IBE < 5%).
+A deep dive into the hydrochemical dataset to ensure quality and understand patterns.
+-   **Subdirectories**: `2.1_Explorative-Datenanalyse`, `2.2_Rock-Type_Analysis`, `2.3_Temperature_Analysis`, `2.4_Data-Quality_Ionic-Balance-Error`, `2.5_Full-Datasets-Analysis`.
+-   **Results**: Cleaned datasets and IBE-filtered data can be found in `2.4_Data-Quality_Ionic-Balance-Error/` as CSV files and PDF reports.
 
 ### 3. Machine Learning & Clustering (`3_Machine-Learning`)
-Implementation of unsupervised learning methods:
--   **Preprocessing**: Normalization, log-scaling, and Gaussian transformations.
--   **MiniSom**: Training Self-Organizing Maps to identify hydrochemical facies and spatial patterns.
--   **Profiling**: Automated generation of cluster profiles and characteristic reports.
+Implementation of unsupervised learning methods to identify hydrochemical facies.
+-   **Subdirectories**: `3.1_Preprocessing`, `3.2_Machine-Learning` (MiniSom).
+-   **Results**: Preprocessed datasets in `3.1_Preprocessing/Preprocessing/` and SOM clustering reports in `3.2_Machine-Learning/SOM_Results/`.
 
 ### 4. Data Imputation (`4_Imputation`)
-Advanced handling of missing data using deep learning:
--   **VAE Architecture**: A Variational Autoencoder designed to learn the latent distribution of groundwater chemistry.
--   **Beta-VAE**: Optimized Beta-scheduling for better disentanglement and reconstruction.
--   **Comparison**: Benchmarking VAE results against traditional statistical methods.
+Deep learning for missing value imputation using Variational Autoencoders.
+-   **Subdirectories**: `4.1_VAE_Imputation`, `4.2_Inference`, `4.3_Evaluation`.
+-   **Results**: Model weights in `4.1_VAE_Imputation/Models/`, imputed datasets in `4.2_Inference/Inference_Results/`, and evaluation reports in `4.3_Evaluation/Evaluation_Results/`.
 
 ### 5. Validation and Inference (`5_kNN`)
-Final evaluation using k-Nearest Neighbors (kNN) and other inference models to validate the learned representations and the quality of the imputed data.
+Comparative validation of VAE results using standard imputation techniques.
+-   **Subdirectories**: `5.1_kNearest-Neighbors.ipynb`.
+-   **Results**: Validation metrics and comparison results are stored in `5_kNN/Inference_Results/`.
+
+## Data Preparation
+
+The hydrochemical datasets required for this project are stored on Google Drive due to their size:
+[Download data from Google Drive](https://drive.google.com/drive/folders/1UW6X8MoAbbR1Ye8dZCb-GDjokEJhqimu?usp=drive_link)
+
+**Instructions:**
+1. Download all files from the link above.
+2. Place these files into the following directory:
+   `Abschlussarbeit Bearbeitung\Jupyter Notebooks\1_Acquisition\1.1_Data-Acquisition-Wrapper\Gesammelte_Datenbanken`
+3. This is required for the Data-Acquisition-Wrapper to process the data correctly.
 
 ---
 
