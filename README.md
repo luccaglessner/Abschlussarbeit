@@ -64,8 +64,9 @@ The following 4 files (.pdfs) are stored in the "Bachelor Thesis Examples" subfo
 The project uses an automated pipeline system located in `Pipeline_Scripts/`.
 
 -   **`run_pipeline_All.py`**: The main entry point that orchestrates the entire workflow.
+-   **`run_pipeline_1.py`**: Automates the Data Acquisition process.
 -   **`run_pipeline_2_3.py`**: Focuses on Analysis and SOM training.
--   **`run_pipeline_4-5.py`**: Handles VAE Imputation and subsequent validation.
+-   **`run_pipeline_4.py`**: Handles VAE Imputation, Inference and Evaluation.
 
 ### Requirements
 -   Python 3.x
