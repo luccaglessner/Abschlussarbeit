@@ -78,3 +78,12 @@ The project uses an automated pipeline system located in `Pipeline_Scripts/`.
 ## Results
 The pipeline automatically generates detailed PDF reports for each stage, located in their respective `*_Results/` directories. These reports provide visual insights into cluster stability, chemistry profiles, and imputation accuracy.
 
+## Reproducibility
+To ensure full scientific reproducibility of the results across all model trainings and pipeline executions, a fixed **Random Seed of `42`** is used throughout the codebase.
+
+This applies specifically to:
+1.  **Self-Organizing Maps (SOM)**: To guarantee the same initial weights and data presentation order during clustering (`3.2_Machine-Learning/MiniSom/MiniSom_Machine-Learning.ipynb`).
+2.  **Variational Autoencoders (VAE)**: To ensure consistent weight initialization, data shuffling, and identical sampling of the latent space via the reparameterization trick (`4.1_VAE_Imputation/VAE_Imputation.py` & `.ipynb`).
+
+The seed is globally enforced via `numpy.random.seed(42)` and `torch.manual_seed(42)`.
+
