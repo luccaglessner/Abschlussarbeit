@@ -1,7 +1,7 @@
 # Hydrochemical Data Analysis and Machine Learning Pipeline
 
 > [!NOTE]
-> The Bachelor Thesis was written in German and the project was initiated and continued in a German context. A translation of the entire repository may occur in the future, but was not part of the thesis submission as of March 9, 2026.
+> The Bachelor Thesis was written in German and the project was initiated and continued in a German context. A translation of the entire repository may occur in the future, but was not part of the thesis submission as of March 9, 2026. However the ReadMe is already translated to english to enable easier introduction to this project for english users.
 
 This repository contains the complete codebase and research pipeline developed for my Bachelor Thesis. The project focuses on the automated acquisition, analysis, and processing of hydrochemical data using modern Machine Learning techniques like Self-Organizing Maps (SOM) and Variational Autoencoders (VAE).
 
@@ -49,6 +49,13 @@ The hydrochemical datasets required for this project are stored on Google Drive 
 2. Place these files into the following directory:
    `Abschlussarbeit Bearbeitung\Jupyter Notebooks\1_Acquisition\1.1_Data-Acquisition-Wrapper\Gesammelte_Datenbanken`
 3. This is required for the Data-Acquisition-Wrapper to process the data correctly.
+
+Die folgenden 4 Dateien (.pdfs) sind im Unterordner "Bachelor Thesis Examples" im Drive abgelegt und stellen die erstellten Ergebnisse dar, welche in der Bachelorarbeit verwendet wurden:
+- `SOM-DISCRIMINATION_Bachelor-Thesis.pdf`
+- `SOM-REPORT_Bachelor-Thesis.pdf`
+- `VAE-CLIPPING_Bachelor-Thesis.pdf`
+- `VAE-NO-CLIPPING-FULL_Bachelor-Thesis.pdf`
+
 
 ---
 
