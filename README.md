@@ -50,7 +50,7 @@ The hydrochemical datasets required for this project are stored on Google Drive 
    `Abschlussarbeit Bearbeitung\Jupyter Notebooks\1_Acquisition\1.1_Data-Acquisition-Wrapper\Gesammelte_Datenbanken`
 3. This is required for the Data-Acquisition-Wrapper to process the data correctly.
 
-Die folgenden 4 Dateien (.pdfs) sind im Unterordner "Bachelor Thesis Examples" im Drive abgelegt und stellen die erstellten Ergebnisse dar, welche in der Bachelorarbeit verwendet wurden:
+The following 4 files (.pdfs) are stored in the "Bachelor Thesis Examples" subfolder on the Drive and represent the results used in the Bachelor's thesis:
 - `SOM-DISCRIMINATION_Bachelor-Thesis.pdf`
 - `SOM-REPORT_Bachelor-Thesis.pdf`
 - `VAE-CLIPPING_Bachelor-Thesis.pdf`
