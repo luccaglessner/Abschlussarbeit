@@ -1,16 +1,17 @@
 # Python 3.10.8 required
 pandas==2.2.3
-numpy==2.0.0
+numpy==2.2.5
 scikit-learn==1.6.1
-matplotlib==3.9.1
+matplotlib==3.10.1
 seaborn==0.13.2
 MiniSom==2.3.5
-torch==2.5.1
-jupyter==1.1.1
+torch==2.9.1
+jupyter==1.0.0
 scipy==1.15.2
 tqdm==4.67.1
-joblib==1.4.2
-folium==0.19.6
+joblib==1.5.0
+folium==0.19.5
 pyproj==3.7.1
-reportlab==4.4.4
+reportlab==4.4.9
 flask==2.3.3
+xlsxwriter==3.2.9
