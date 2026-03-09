@@ -1,3 +1,4 @@
+# Python 3.10.8 required
 pandas==2.2.3
 numpy==2.0.0
 scikit-learn==1.6.1
