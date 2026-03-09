@@ -64,8 +64,12 @@ Abschlussarbeit Bearbeitung/Jupyter Notebooks/Pipeline_Scripts/run_pipeline_4-5_
 Abschlussarbeit Bearbeitung/Jupyter Notebooks/Pipeline_Scripts/run_pipeline_count-data.py
 
 # Data Acquisition DBs
-Abschlussarbeit Bearbeitung/Jupyter Notebooks/1_Acquisition/1.1_Data-Acquisition-Wrapper/Gesammelte_Datenbanken/
+Abschlussarbeit Bearbeitung/Jupyter Notebooks/1_Acquisition/1.1_Data-Acquisition-Wrapper/Gesammelte_Datenbanken/*
+!Abschlussarbeit Bearbeitung/Jupyter Notebooks/1_Acquisition/1.1_Data-Acquisition-Wrapper/Gesammelte_Datenbanken/.gitkeep
 Abschlussarbeit Bearbeitung/Jupyter Notebooks/1_Acquisition/1.1_Data-Acquisition-Wrapper/Zwischenstände/
+
+# VS Code
+.vscode/
 
 # Comparison Reports
 Abschlussarbeit Bearbeitung/Jupyter Notebooks/4-5_Comparison/

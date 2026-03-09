@@ -7,17 +7,23 @@ from pathlib import Path
 from datetime import datetime
 import textwrap
 
-def replace_with_indent(code, target, injection):
-    if target not in code: return code
-    lines = code.splitlines()
-    for i, line in enumerate(lines):
-        if target in line:
-            indent = line[:line.find(target)]
-            dedented = textwrap.dedent(injection).strip()
-            indented = textwrap.indent(dedented, indent)
-            lines[i] = line + "\n" + indented
-            break
-    return "\n".join(lines)
+import json
+def convert_notebook_to_python(notebook_path) -> str:
+    """Liest ein Jupyter Notebook ein und wandelt es native in Python-Code um, ohne nbconvert zu benutzen (Bug in Windows/Jupyter)."""
+    with open(notebook_path, 'r', encoding='utf-8') as f:
+        nb = json.load(f)
+        
+    code_lines = []
+    for cell in nb.get('cells', []):
+        if cell.get('cell_type') == 'code':
+            source = cell.get('source', [])
+            for line in source:
+                if line.strip().startswith('%') or line.strip().startswith('!'):
+                    line = '# ' + line
+                code_lines.append(line)
+            code_lines.append('\n\n')
+            
+    return ''.join(code_lines)
 
 # ------------------------- Konfiguration -------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -97,18 +103,29 @@ def get_run_preview_info():
         
     return results
 
+def replace_with_indent(code, target, injection):
+    if target not in code: return code
+    lines = code.splitlines()
+    for i, line in enumerate(lines):
+        if target in line:
+            indent = line[:line.find(target)]
+            dedented = textwrap.dedent(injection).strip()
+            indented = textwrap.indent(dedented, indent)
+            lines[i] = line + "\n" + indented
+            break
+    return "\n".join(lines)
+
 def run_notebook_as_job(name, path, params_dict=None):
     # ------------------------- Führt ein Notebook mittels Konvertierung zu Python aus -------------------------
-    print(f"\n--- Starte: {name} ---")
+    print(f"\n--- Starte: {name} (ANTIGRAVITY VERSION 2.1) ---")
     
     if not path.exists():
         print(f"FEHLER: Datei nicht gefunden: {path}")
         return False
     # ------------------------- Notebook zu Python-Code konvertieren -------------------------
-    print(f"  -> Lade Code aus {path.name}...")
+    print(f"  -> Lade Code aus {path.name} (Native JSON Reader)...")
     try:
-        convert_cmd = ["jupyter", "nbconvert", "--to", "python", "--stdout", str(path)]
-        python_code = subprocess.check_output(convert_cmd, cwd=path.parent).decode('utf-8', errors='ignore')
+        python_code = convert_notebook_to_python(path)
     except Exception as e:
         print(f"Fehler beim Konvertieren von {path.name}: {e}")
         return False
@@ -180,6 +197,7 @@ def run_notebook_as_job(name, path, params_dict=None):
     final_code = "\n".join(filtered_code_lines)
 
     # ------------------------- Parameter-Injektion -------------------------
+    injection_code_params = ""
     if params_dict:
         injection_code_params = "\n# --- INJECTED PARAMETERS ---\n"
         for key, value in params_dict.items():
@@ -188,32 +206,32 @@ def run_notebook_as_job(name, path, params_dict=None):
             else:
                 injection_code_params += f"{key} = {value}\n"
         
-    # ------------------------- Injektion vor dem Main-Block (falls vorhanden), ansonsten am Ende anhängen -------------------------
+    # ------------------------- Injektion vor dem ersten Main-Block oder am Anfang -------------------------
     if 'if __name__ == "__main__":' in final_code:
-        final_code = final_code.replace('if __name__ == "__main__":', f'{injection_code_params}\nif __name__ == "__main__":')
+        final_code = final_code.replace('if __name__ == "__main__":', f'{injection_code_params}\nif __name__ == "__main__":', 1)
     else:
-        final_code += injection_code_params
+        final_code = injection_code_params + "\n" + final_code
 
-        # ------------------------- Logik für Training-Run Selektion (nur für 4.1) -------------------------
-        if "TARGET_RUN_INDEX" in params_dict and "VAE_Imputation" in str(path):
-             indent = "    "
-             target_run_idx = params_dict["TARGET_RUN_INDEX"]
-             
-         logic_code = f"\n{indent}# ------------------------- INJIZIERTE LOGIK (FILTERUNG) -------------------------\n"
-         logic_code += f"{indent}target_idx_usr = {target_run_idx}\n"
-         logic_code += f"{indent}real_idx = target_idx_usr\n"
-         logic_code += f"{indent}if real_idx > 0: real_idx += 1 \n"
-         logic_code += f"{indent}if real_idx > 5: real_idx += 1 \n"
-         logic_code += f"{indent}if real_idx < len(sorted_combos):\n"
-         logic_code += f"{indent}    sorted_combos = [sorted_combos[real_idx]]\n"
-         logic_code += f"{indent}    sorted_labels = [sorted_labels[real_idx]]\n"
-         logic_code += f"{indent}else:\n"
-         logic_code += f"{indent}    sorted_combos = [sorted_combos[0]]\n"
-         logic_code += f"{indent}    sorted_labels = [sorted_labels[0]]\n"
-             
-             loop_line = "for i, combo in enumerate(sorted_combos):"
-             if loop_line in final_code:
-                 final_code = final_code.replace(loop_line, logic_code + "\n" + indent + loop_line)
+    # ------------------------- Logik für Training-Run Selektion (nur für 4.1) -------------------------
+    if params_dict and "TARGET_RUN_INDEX" in params_dict and "VAE_Imputation" in str(path):
+        indent = "    "
+        target_run_idx = params_dict["TARGET_RUN_INDEX"]
+         
+        logic_code = f"\n{indent}# ------------------------- INJIZIERTE LOGIK (FILTERUNG) -------------------------\n"
+        logic_code += f"{indent}target_idx_usr = {target_run_idx}\n"
+        logic_code += f"{indent}real_idx = target_idx_usr\n"
+        logic_code += f"{indent}if real_idx > 0: real_idx += 1 \n"
+        logic_code += f"{indent}if real_idx > 5: real_idx += 1 \n"
+        logic_code += f"{indent}if real_idx < len(sorted_combos):\n"
+        logic_code += f"{indent}    sorted_combos = [sorted_combos[real_idx]]\n"
+        logic_code += f"{indent}    sorted_labels = [sorted_labels[real_idx]]\n"
+        logic_code += f"{indent}else:\n"
+        logic_code += f"{indent}    sorted_combos = [sorted_combos[0]]\n"
+        logic_code += f"{indent}    sorted_labels = [sorted_labels[0]]\n"
+         
+        loop_line = "for i, combo in enumerate(sorted_combos):"
+        if loop_line in final_code:
+            final_code = final_code.replace(loop_line, logic_code + "\n" + indent + loop_line)
 
     temp_script_path = path.parent / f"{path.stem}_Job_Temp.py"
     
@@ -222,7 +240,7 @@ def run_notebook_as_job(name, path, params_dict=None):
             f.write(final_code)
         
         #  ------------------------- Sequentielle Ausführung mit Live Output ------------------------- 
-        p = subprocess.Popen(["python", "-u", str(temp_script_path)], cwd=path.parent, text=True, encoding='utf-8')
+        p = subprocess.Popen([sys.executable, "-u", str(temp_script_path)], cwd=path.parent, text=True, encoding='utf-8')
         p.wait()
         
         return p.returncode == 0
@@ -235,6 +253,8 @@ def run_notebook_as_job(name, path, params_dict=None):
             except: pass
 
 def main():
+    print("==================================================")
+    print("   PIPELINE 4 (FEATURE SELECTION) - v2.1 (DEBUG) ")
     print("==================================================")
     print("       PIPELINE 4 (FEATURE SELECTION)             ")
     print("==================================================")

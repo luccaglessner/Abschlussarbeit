@@ -215,15 +215,18 @@ def main():
         active_model_dir = None
         
         while active_model_dir is None:
-            # ------------------------- Vergangenes Problem: Viele Abstürze bei 4.1 - hier Prüfung -------------------------
             if p_4_1.poll() is not None:
                 print("4.1 Training wurde unerwartet beendet")
                 break
                 
-            active_model_dir = get_latest_model_dir()
-            if active_model_dir:
-                print(f"Aktiven Ordner gefunden: {active_model_dir.name}. Generierung kann anfangs bis zu 15 Minuten dauern.")
-                break
+            candidate = get_latest_model_dir()
+            if candidate:
+                # Prüfen ob schon erste Metadaten-Files da sind
+                meta_files = list(candidate.glob("*_meta.json"))
+                if meta_files:
+                    active_model_dir = candidate
+                    print(f"Aktiven Ordner gefunden: {active_model_dir.name}. Training läuft...")
+                    break
             time.sleep(2)
 
         p_4_2 = None
