@@ -1,0 +1,15 @@
+pandas==2.2.3
+numpy==2.0.0
+scikit-learn==1.6.1
+matplotlib==3.9.1
+seaborn==0.13.2
+MiniSom==2.3.5
+torch==2.5.1
+jupyter==1.1.1
+scipy==1.15.2
+tqdm==4.67.1
+joblib==1.4.2
+folium==0.19.6
+pyproj==3.7.1
+reportlab==4.4.4
+flask==2.3.3
