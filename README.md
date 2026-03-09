@@ -70,7 +70,10 @@ The project uses an automated pipeline system located in `Pipeline_Scripts/`.
 ### Requirements
 -   Python 3.x
 -   Jupyter Notebook
--   Core libraries: `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `seaborn`, `minisom`, `pytorch` / `tensorflow`.
+-   All required Python packages and their exact versions are listed in `requirements.txt`. Install them using:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ## Results
 The pipeline automatically generates detailed PDF reports for each stage, located in their respective `*_Results/` directories. These reports provide visual insights into cluster stability, chemistry profiles, and imputation accuracy.
