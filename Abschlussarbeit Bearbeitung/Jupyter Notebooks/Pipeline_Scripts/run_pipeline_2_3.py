@@ -78,8 +78,10 @@ def main():
     # ----------------------------- 2.4 Datenqualität (Unterordner) -----------------------------
     dq_root = BASE_DIR / "2_Analysis/2.4_Data-Quality_Ionic-Balance-Error"
     if dq_root.exists():
+        # ---------------------------------------------------------------------------------
         # Die Unterordner (Global_scheme_ions, Main-Ions-Six, etc.) dienen nur der Dokumentation
         # und generieren PDFs. Sie verändern die Daten nicht und werden ab hier übersprungen.
+        # ---------------------------------------------------------------------------------
         
         # ----------------------------- 2.4 Filterungung -----------------------------
         filter_nb = dq_root / "2.4_Filter_Database.ipynb"

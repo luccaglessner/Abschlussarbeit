@@ -42,6 +42,7 @@ def get_latest_preprocessing_file():
     latest_folder = max(timestamp_folders, key=lambda f: f.stat().st_mtime)
     return latest_folder / "Preprocessed_SOM_Ready.csv"
 
+# ------------------------- Trainingsmerkmale Helfer -------------------------
 def get_training_features(user_selection, df_columns):
     training_features = []
     for user_col in user_selection:
@@ -64,6 +65,7 @@ def get_training_features(user_selection, df_columns):
                  found = True
     return training_features
 
+# ------------------------- Vorschau Helfer -------------------------
 def get_run_preview_info():
     csv_path = get_latest_preprocessing_file()
     if not csv_path or not csv_path.exists():
@@ -103,6 +105,7 @@ def get_run_preview_info():
         
     return results
 
+# ------------------------- Injektions Helfer -------------------------
 def replace_with_indent(code, target, injection):
     if target not in code: return code
     lines = code.splitlines()
@@ -117,7 +120,7 @@ def replace_with_indent(code, target, injection):
 
 def run_notebook_as_job(name, path, params_dict=None):
     # ------------------------- Führt ein Notebook mittels Konvertierung zu Python aus -------------------------
-    print(f"\n--- Starte: {name} (ANTIGRAVITY VERSION 2.1) ---")
+    print(f"\n--- Starte: {name} ---")
     
     if not path.exists():
         print(f"FEHLER: Datei nicht gefunden: {path}")
@@ -254,8 +257,6 @@ def run_notebook_as_job(name, path, params_dict=None):
 
 def main():
     print("==================================================")
-    print("   PIPELINE 4 (FEATURE SELECTION) - v2.1 (DEBUG) ")
-    print("==================================================")
     print("       PIPELINE 4 (FEATURE SELECTION)             ")
     print("==================================================")
     
@@ -299,7 +300,7 @@ def main():
     os.environ["VAE_CLIPPING"] = vae_clipping
     print(f"Clipping gesetzt auf: {'AKTIVIERT' if vae_clipping == '1' else 'DEAKTIVIERT'}")
     
-    # ------------------------- 1. Training (4.1) -------------------------
+    # ------------------------- Training (4.1) -------------------------
     start_ts = time.time()
     success_4_1 = run_notebook_as_job("4.1 VAE Training", NOTEBOOK_4_1, {"TARGET_RUN_INDEX": target_idx, "MAX_ITERATIONS": 1})
     
@@ -307,7 +308,7 @@ def main():
         print("Abbruch wegen Fehler in 4.1")
         return
 
-    # ------------------------- 2. Modell finden -------------------------
+    # ------------------------- Modell finden -------------------------
     models_root = NOTEBOOK_4_1.parent / "Models"
     time.sleep(2)
     candidates = [d for d in models_root.iterdir() if d.is_dir()]
@@ -315,7 +316,7 @@ def main():
     latest_model = max(candidates, key=lambda d: d.stat().st_mtime)
     print(f"Aktives Modell-Verzeichnis: {latest_model.name}")
 
-    # ------------------------- 3. Inferenz (4.2) -------------------------
+    # ------------------------- Inferenz (4.2) -------------------------
 
     print(f"\n[2/3] Starte 4.2 Inferenz...")
     inference_script = NOTEBOOK_4_2.parent / "Inference_Job.py"
@@ -332,7 +333,7 @@ def main():
         print("Abbruch wegen Fehler in 4.2")
         return
 
-    # ------------------------- 4. Auswertung (4.3) -------------------------
+    # ------------------------- Auswertung (4.3) -------------------------
     success_4_3 = run_notebook_as_job("4.3 VAE Evaluation", NOTEBOOK_4_3)
     
     if success_4_3:

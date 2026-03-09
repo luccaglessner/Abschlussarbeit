@@ -59,7 +59,7 @@ def plot_temperature_histogram(df):
     raw_vals = df['temperature_in_c'].astype(str).str.replace(',', '.', regex=False)
     temp_numeric = pd.to_numeric(raw_vals, errors='coerce')
     
-    # Debug: Wie viele haben überhaupt Werte?
+    # --------------------------- Debug ---------------------------
     valid_vals_count = temp_numeric.notna().sum()
     print(f"DEBUG: Anzahl Zeilen mit gültiger Temperatur (vor Filter): {valid_vals_count}")
     
@@ -75,7 +75,7 @@ def plot_temperature_histogram(df):
     # ----------------------------- Plotten (Geteiltes Histogramm) -----------------------------
     data_below = temp_data[temp_data < 10]
     data_above = temp_data[temp_data >= 10]
-    bins = np.linspace(0, 500, 101) # Linear bis 500
+    bins = np.linspace(0, 500, 101) # --------------------------- Linear bis 500 ---------------------------
 
     
     sns.histplot(data_below, bins=bins, color='#8d94a7', alpha=0.8, edgecolor='#555', linewidth=0.5, label='< 10°C')
@@ -95,8 +95,8 @@ def plot_temperature_histogram(df):
     plt.axvline(10, color='red', linestyle='-', linewidth=2, label='10°C Grenze')
     
     # --------------------------------------- Statistik Text Box hinzufügen ---------------------------------------
-    # Farben anpassen / Position
-    stats_text = (
+    # --------------------------- Farben anpassen / Position
+    stats_text = ( 
         f"Analysiert Gesamt: {total_count:,}\n"
         f"≥ 10°C: {above_10:,} ({above_10/total_count:.1%})\n"
         f"< 10°C: {below_10:,} ({below_10/total_count:.1%})"
@@ -124,16 +124,16 @@ def plot_ibe_histogram(df):
     
     # ----------------------------- Ziel-Ionen definieren (Main-Ions-Six) -----------------------------
     ions = {
-        'Na': 1, 'Ca': 2, 'Mg': 2, # Kationen
-        'Cl': 1, 'HCO3': 1, 'SO4': 2 # Anionen
+        'Na': 1, 'Ca': 2, 'Mg': 2, # --------------------------- Kationen ---------------------------
+        'Cl': 1, 'HCO3': 1, 'SO4': 2 # --------------------------- Anionen ---------------------------
     }
     
     # --------------------------------------- Spalten identifizieren ---------------------------------------
     found = {}
     for ion in ions:
-        matches = [c for c in df.columns if c == ion] # Exakter Match
+        matches = [c for c in df.columns if c == ion] # --------------------------- Exakter Match
         if not matches:
-             matches = [c for c in df.columns if f"{ion}_in_" in c] # Fallback
+             matches = [c for c in df.columns if f"{ion}_in_" in c] # --------------------------- Fallback
         
         if matches:
             found[ion] = matches[0]

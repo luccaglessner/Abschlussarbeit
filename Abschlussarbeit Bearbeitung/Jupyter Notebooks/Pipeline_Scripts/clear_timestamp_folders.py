@@ -28,7 +28,7 @@ def clean_timestamp_folders():
         return
 
     # ----------------------------- Scan -----------------------------
-    tasks = [] # Liste von (prefix, parent_path, newest_dir, dirs_to_delete)
+    tasks = [] # --------------------------- Liste von (prefix, parent_path, newest_dir, dirs_to_delete)
 
     # ----------------------------- Durchgehen aller übergeordneten Ordner ----------------------------------------------------------
     for item in ROOT_DIR.iterdir():

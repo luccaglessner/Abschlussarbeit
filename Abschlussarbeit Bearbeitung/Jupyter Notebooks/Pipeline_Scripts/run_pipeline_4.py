@@ -143,10 +143,10 @@ def main():
     python_code = python_code.replace("QUANTILE_CLIPPING = True", "QUANTILE_CLIPPING = (os.environ.get('VAE_CLIPPING') == '1')")
     python_code = python_code.replace("QUANTILE_CLIPPING = False", "QUANTILE_CLIPPING = (os.environ.get('VAE_CLIPPING') == '1')")
     
-    # Meta-Tracking Initialisierung
+    # --------------------------- Meta-Tracking Initialisierung ---------------------------
     python_code = replace_with_indent(python_code, "# ------------------------- Quantile Clipping -------------------------", 'clipping_meta = {"active": False}')
     
-    # Erfassen der Grenzen (lower_q und upper_q)
+    # --------------------------- Erfassen der Grenzen (lower_q und upper_q) ---------------------------
     bounds_capture = """
         if QUANTILE_CLIPPING:
             lower_q_scaled = scaler.transform(lower_q.reshape(1, -1))[0]
@@ -155,7 +155,7 @@ def main():
     """
     python_code = replace_with_indent(python_code, "X_train_scaled = scaler.fit_transform(X_train_raw)", bounds_capture)
     
-    # In Metadaten-Dictionary injizieren
+    # --------------------------- In Metadaten-Dictionary injizieren ---------------------------
     python_code = python_code.replace('"training_loss_history": epoch_loss_history,', '"training_loss_history": epoch_loss_history, "quantile_clipping": clipping_meta,')
     
     # ------------------------- Bereinung Code -------------------------
@@ -221,7 +221,7 @@ def main():
                 
             candidate = get_latest_model_dir()
             if candidate:
-                # Prüfen ob schon erste Metadaten-Files da sind
+                # --------------------------- Prüfen ob schon erste Metadaten-Files da sind ---------------------------
                 meta_files = list(candidate.glob("*_meta.json"))
                 if meta_files:
                     active_model_dir = candidate
@@ -306,7 +306,7 @@ def main():
                 """
                 python_code_4_3 = replace_with_indent(python_code_4_3, "feat_subset = subset[subset['Feature'] == feature]", clipping_bounds_logic)
                 
-                # 2. Add Clipping for Metrics
+                # --------------------------- Clipping für Metriken --------------------------- 
                 python_code_4_3 = python_code_4_3.replace(
                     "y_true = feat_subset['Original']", 
                     "y_true = np.clip(feat_subset['Original'], low_val, high_val) if is_clipped else feat_subset['Original']"
@@ -315,7 +315,7 @@ def main():
                     "y_pred = np.clip(feat_subset['Imputed'], low_val, high_val) if is_clipped else feat_subset['Imputed']"
                 )
                 
-                # 3. Add Clipping for Plots
+                # --------------------------- Clipping für Plots --------------------------- 
                 plot_clipping = """
                     if is_clipped:
                         subset_plot = subset_plot.copy()
@@ -324,7 +324,7 @@ def main():
                 """
                 python_code_4_3 = replace_with_indent(python_code_4_3, "# ------------------------- Scatter-Plots -------------------------", plot_clipping)
 
-                # Plot-Anpassungen
+                # --------------------------- Plot-Anpassungen ---------------------------
                 filtered_code_4_3 = []
                 for line in python_code_4_3.splitlines():
                     if "get_ipython()" in line:
