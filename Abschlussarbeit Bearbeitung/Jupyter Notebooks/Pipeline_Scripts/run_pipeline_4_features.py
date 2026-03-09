@@ -317,17 +317,7 @@ def main():
     print(f"Aktives Modell-Verzeichnis: {latest_model.name}")
 
     # ------------------------- Inferenz (4.2) -------------------------
-
-    print(f"\n[2/3] Starte 4.2 Inferenz...")
-    inference_script = NOTEBOOK_4_2.parent / "Inference_Job.py"
-    try:
-        # ------------------------- Wir übergeben FORCE_MODEL_FOLDER damit er genau diesen Ordner nimmt -------------------------
-        p_4_2 = subprocess.Popen(["python", "-u", str(inference_script)], cwd=NOTEBOOK_4_2.parent, text=True, encoding='utf-8', env={**os.environ, "FORCE_MODEL_FOLDER": latest_model.name})
-        p_4_2.wait()
-        success_4_2 = p_4_2.returncode == 0
-    except Exception as e:
-        print(f"Fehler in 4.2: {e}")
-        success_4_2 = False
+    success_4_2 = run_notebook_as_job("4.2 VAE Inference", NOTEBOOK_4_2, {"TARGET_RUN_INDEX": target_idx, "FORCE_MODEL_FOLDER": latest_model.name})
 
     if not success_4_2:
         print("Abbruch wegen Fehler in 4.2")
