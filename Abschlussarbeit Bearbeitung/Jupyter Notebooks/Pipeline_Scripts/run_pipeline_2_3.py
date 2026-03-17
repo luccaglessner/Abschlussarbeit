@@ -58,6 +58,19 @@ def main():
             os.environ['SOM_MODE'] = 'MANUAL'
             print(">> Modus gesetzt: MANUAL\n")
 
+    # --------- deutscher kommentar ---------
+    # Abfrage für Oberrheingraben-Filter
+    # ---------------------------------------
+    if "SOM_REGION" not in os.environ:
+        print("[KONFIGURATION] Soll zusätzlich ein Bericht für den Oberrheingraben erstellt werden?")
+        choice_region = input("Deine Wahl (j/n): ").strip().lower()
+        if choice_region in ['j', 'ja', 'y', 'yes']:
+            os.environ['SOM_REGION'] = 'OBERRHEINGRABEN'
+            print(">> Region gesetzt: OBERRHEINGRABEN\n")
+        else:
+            os.environ['SOM_REGION'] = 'ALL'
+            print(">> Region gesetzt: ALL (Nur Hauptbericht)\n")
+
     
     # ----------------------------- 2.1 - 2.3 Explorative Analysen -----------------------------
     notebooks = [

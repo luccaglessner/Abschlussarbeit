@@ -100,6 +100,23 @@ def main():
         os.environ['SOM_MODE'] = 'MANUAL'
         print(">> Modus gesetzt: MANUAL")
 
+    # --------- deutscher kommentar ---------
+    # Abfrage für Oberrheingraben-Filter
+    # ---------------------------------------
+    print("\n[KONFIGURATION] Soll zusätzlich ein Bericht für den Oberrheingraben erstellt werden?")
+    if auto_mode:
+        region_choice = 'j'
+        print("Deine Wahl (j/n): j (--auto Modus aktiv)")
+    else:
+        region_choice = input("Deine Wahl (j/n): ").strip().lower()
+    
+    if region_choice in ['j', 'ja', 'y', 'yes']:
+        os.environ['SOM_REGION'] = 'OBERRHEINGRABEN'
+        print(">> Region gesetzt: OBERRHEINGRABEN")
+    else:
+        os.environ['SOM_REGION'] = 'ALL'
+        print(">> Region gesetzt: ALL (Nur Hauptbericht)")
+
     start_total = time.time()
     
     # ----------------------------- Ausführung -----------------------------
